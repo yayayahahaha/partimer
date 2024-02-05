@@ -1,8 +1,9 @@
-import { keyboardAction } from './keyboard-control'
+import { keyboardAction } from './keyboard-control.js'
 
 // 按下 Enter 鍵
 function pressEnter() {
-  keyboardAction('VK_RETURN', 'click')
+  // keyboardAction('VK_RETURN', 'click')
+  keyboardAction(0x0D, 'click')
 }
 
 // 按下 Alt 鍵

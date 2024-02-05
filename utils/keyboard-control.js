@@ -9,6 +9,7 @@ function keyboardAction(keyCode, action) {
   const KEYEVENTF_KEYUP = 0x0002
 
   let key = keyCode
+  console.log(key)
   if (action === 'click') {
     user32.keybd_event(key, 0, KEYEVENTF_EXTENDEDKEY, 0)
     user32.keybd_event(key, 0, KEYEVENTF_KEYUP, 0)
