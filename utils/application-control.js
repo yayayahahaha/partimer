@@ -28,11 +28,4 @@ function getForegroundWindowRect() {
   }
 }
 
-setTimeout(() => {
-  // 獲取當前前景窗口的標題和大小
-  const title = getForegroundWindowTitle()
-  const rect = getForegroundWindowRect()
-
-  console.log('應用程式名稱:', title)
-  console.log('視窗大小:', rect)
-}, 5000)
+export { getForegroundWindowTitle, getForegroundWindowRect }
