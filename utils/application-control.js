@@ -1,24 +1,38 @@
-const ffi = require('ffi-napi')
+import ffi from 'ffi-napi'
 
-// 定義 Windows API 函數
-const user32 = ffi.Library('user32', {
-  EnumWindows: ['bool', ['pointer', 'int32']],
-  GetWindowTextA: ['int', ['long', 'string', 'int']],
-  IsWindowVisible: ['bool', ['long']],
+// 假設你要調用的Windows API函數定義如下
+const user32 = new ffi.Library('user32', {
+  GetForegroundWindow: ['long', []],
+  GetWindowTextA: ['long', ['long', 'string', 'long']],
+  GetWindowRect: ['bool', ['long', 'pointer']],
 })
 
-// 定義 JavaScript 回調函數，用於處理 EnumWindows 的結果
-const EnumWindowsProc = ffi.Callback('bool', ['long', 'long'], function (hwnd, lParam) {
-  const buffer = Buffer.alloc(255)
-  if (user32.IsWindowVisible(hwnd)) {
-    user32.GetWindowTextA(hwnd, buffer, 255)
-    const title = buffer.toString('utf8')
-    if (title.length > 0) {
-      console.log('Window Title:', title)
-    }
+// 定義一個函數來獲取當前前景窗口的標題
+function getForegroundWindowTitle() {
+  const buf = Buffer.alloc(256)
+  const handle = user32.GetForegroundWindow()
+  user32.GetWindowTextA(handle, buf, 256)
+  return buf.toString()
+}
+
+// 定義一個函數來獲取當前前景窗口的位置和大小
+function getForegroundWindowRect() {
+  const rect = Buffer.alloc(16) // RECT結構的大小為16個位元組
+  const handle = user32.GetForegroundWindow()
+  user32.GetWindowRect(handle, rect)
+  return {
+    left: rect.readInt32LE(0),
+    top: rect.readInt32LE(4),
+    right: rect.readInt32LE(8),
+    bottom: rect.readInt32LE(12),
   }
-  return true
-})
+}
 
-// 調用 EnumWindows 函數，並將回調函數傳遞給它
-user32.EnumWindows(EnumWindowsProc, 0)
+setTimeout(() => {
+  // 獲取當前前景窗口的標題和大小
+  const title = getForegroundWindowTitle()
+  const rect = getForegroundWindowRect()
+
+  console.log('應用程式名稱:', title)
+  console.log('視窗大小:', rect)
+}, 5000)
