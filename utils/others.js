@@ -28,7 +28,7 @@ function getApplicationInfo(showConsole = true) {
   return { applicationTitle, x, y, endX, endY }
 }
 
-async function buy(buyTimes = 1, eachRoundItems) {
+async function buy(buyTimes = 1, eachRoundItems = 10) {
   const { x, y } = getApplicationInfo()
 
   const searchOffset = { x: 120, y: 120 }

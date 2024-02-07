@@ -5,7 +5,7 @@ import { beforeStart, buy } from './others.js'
 async function start() {
   await beforeStart(3)
 
-  buy(1)
+  buy(8)
 }
 
 export { start }
