@@ -5,9 +5,9 @@ async function start() {
   await beforeStart(3)
 
   // displayMousePosition()
-  
-  // buy(2)
-  extract(35)
+
+  // buy(3)
+  extract(5)
 }
 
 export { start }
