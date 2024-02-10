@@ -10,6 +10,14 @@ function moveMouse(x, y) {
   user32.SetCursorPos(x, y)
 }
 
+function clickRightMouse() {
+  const MOUSEEVENTF_RIGHTDOWN = 0x0008
+  const MOUSEEVENTF_RIGHTUP = 0x0010
+
+  user32.mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0)
+  user32.mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0)
+}
+
 function clickMouse() {
   const MOUSEEVENTF_LEFTDOWN = 0x02
   const MOUSEEVENTF_LEFTUP = 0x04
@@ -28,6 +36,7 @@ function getCurrentCoordinate() {
 }
 
 // 模擬滑鼠移動
+// TODO update parameters to object-config type
 function moveMouseWithBezier(
   startCoordinate = getCurrentCoordinate(),
   oriControlCoordinate = null,
@@ -60,4 +69,4 @@ function moveMouseWithBezier(
   }
 }
 
-export { getCurrentCoordinate, moveMouseWithBezier, moveMouse, clickMouse }
+export { getCurrentCoordinate, moveMouseWithBezier, moveMouse, clickMouse, clickRightMouse }
