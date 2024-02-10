@@ -1,6 +1,8 @@
+// 1366 * 768
+
 import { getForegroundWindowRect, getForegroundWindowTitle } from './application-control.js'
 import { pressEnter } from './keyboard-action.js'
-import { clickMouse, moveMouseWithBezier, getCurrentCoordinate } from './mouse-control.js'
+import { clickMouse, moveMouseWithBezier, getCurrentCoordinate, clickRightMouse } from './mouse-control.js'
 
 const delay = (milSec = 200, randomSec = 100) =>
   new Promise((r) => {
@@ -95,41 +97,90 @@ function _moveMouseByOffset(x, y, offestPayload, { steps = 5000, randomX = 10, r
   )
 }
 
-async function extract(times = 5) {
+function displayMousePosition() {
+  const { x, y } = getApplicationInfo()
+  setInterval(() => {
+    const [ax, ay] = getCurrentCoordinate()
+    console.log('absolute position: ', ax, ay)
+    console.log('application position: ',x ,y)
+    console.log('offset position: ', ax - x, ay - y)
+    console.log()
+  }, 1000)
+}
+
+async function extract(itemsCount = 10) {
   const { x, y } = getApplicationInfo()
 
-  // const [cx, cy] = getCurrentCoordinate()
-  // console.log(cx - x, cy - y)
+  // into the town, turn on map name, scale up the bag size, move bag to aline with the map name.
+  // please according the first items you want to extract define the veryFirstStart.
+  let row = 1
+  let column = 7
+  const eachBlockSize = 42
+  const firstCoordinate = { x: 30, y: 155 }
 
-  const extractOpenOffset = { x: 521, y: 455 }
-  const putOnOffset = { x: 620, y: 500 }
-  const confirmOffset = { x: 730, y: 500 }
+  const extractOpenOffset = { x: 505, y: 489 }
+  const confirmOffset = { x: 730, y: 499 }
 
-  // open extract button
-  _moveMouseByOffset(x, y, extractOpenOffset, { randomX: 3, randomY: 3 })
+  let offset = _getOffsetByCoordinate(row, column)
+
+  _moveMouseByOffset(x, y, extractOpenOffset, { randomX: 2, randomY: 2 })
   await delay()
   clickMouse()
   await delay()
 
-  for (let i = 0; i < times; i++) {
-    // put everythings on the table
-    _moveMouseByOffset(x, y, putOnOffset, { randomX: 5, randomY: 3 })
+  for (let index = 1; index <= itemsCount; index++) {
+    _moveMouseByOffset(x, y, offset, { randomX: 3, randomY: 3 })
     await delay()
-    clickMouse()
-    await delay()
-
-    // confirm
-    _moveMouseByOffset(x, y, confirmOffset, { randomX: 5, randomY: 3 })
-    await delay()
-    clickMouse()
-    await delay()
-    pressEnter()
+    clickRightMouse()
     await delay()
 
-    await delay(4000)
-    pressEnter()
-    await delay()
+    const { row: nRow, column: nColumn } = _toNextRowColumn(row, column)
+    row = nRow
+    column = nColumn
+    offset = _getOffsetByCoordinate(row, column)
+
+    if (index % 5 === 0) {
+      _moveMouseByOffset(x, y, confirmOffset, { randomX: 5, randomY: 2 })
+      await delay()
+      clickMouse()
+      await delay()
+      pressEnter()
+      await delay()
+
+      await delay(4000)
+
+      pressEnter()
+      await delay()
+    }
+  }
+
+  function _toNextRowColumn(row, coloumn) {
+    let returnRow = row
+    let returnColumn = coloumn
+
+    returnColumn = coloumn % 4 === 0 ? returnColumn - 3 : returnColumn + 1
+
+    if (column % 4 === 0) {
+      returnRow++
+    }
+    if (returnRow % 9 === 0) {
+      returnRow = 1
+      returnColumn += 4
+    }
+
+    return {
+      row: returnRow,
+      column: returnColumn,
+    }
+  }
+
+  function _getOffsetByCoordinate(row, column) {
+    const offset = {
+      x: firstCoordinate.x + (column - 1) * eachBlockSize,
+      y: firstCoordinate.y + (row - 1) * eachBlockSize,
+    }
+    return offset
   }
 }
 
-export { delay, beforeStart, getApplicationInfo, buy, extract }
+export { delay, beforeStart, getApplicationInfo, buy, extract, displayMousePosition }
