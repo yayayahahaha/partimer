@@ -1,9 +1,12 @@
 import { GlobalKeyboardListener } from 'node-global-key-listener'
 import fs from 'fs'
+import { beforeStart } from './others.js'
 
 const v = new GlobalKeyboardListener()
 
-function start() {
+async function start() {
+  await beforeStart(5)
+
   const things = []
 
   //Log every key that's pressed.
@@ -29,22 +32,21 @@ function start() {
   function shutdown() {
     v.removeListener(globalListener)
 
-    console.log("all these things that Iv'e done: ", things)
-    const miniTimestamp = Math.min(...things.map((thing) => thing.timestamp))
-    for (let index = 0; index < things.length; index++) {
-      const thing = things[index]
-
-      thing.timestamp -= miniTimestamp
-
-      // 避免重複按壓造成多次記錄一樣的事件
-      let nextItem = things[index + 1]
-      while (nextItem != null) {
-        if (nextItem.state === thing.state && nextItem.rawKey === thing.rawKey) {
-          things.splice(index + 1, 1)
+    // console.log("all these things that Iv'e done: ", things)
+    fs.writeFileSync('./result-origin.json', JSON.stringify(things, null, 2))
+    const minTimestamp = Math.min(...things.map((thing) => thing.timestamp))
+    for (let i = 0; i < things.length; i++) {
+      const current = things[i]
+      current.timestamp -= minTimestamp
+      let next = things[i + 1]
+      while (next != null) {
+        if (next.state === current.state && next.nameRaw === current.nameRaw) {
+          things.splice(i + 1, 1)
         } else break
-        nextItem = things[index + 1]
+        next = things[i + 1]
       }
     }
+    console.log(things)
 
     fs.writeFileSync('./result.json', JSON.stringify(things, null, 2))
   }

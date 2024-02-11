@@ -6,8 +6,8 @@ async function start() {
 
   // displayMousePosition()
 
-  // buy(3)
-  extract(5)
+  // buy(4)
+  extract(70)
 }
 
 export { start }
