@@ -7,8 +7,10 @@ function start() {
   const things = []
 
   //Log every key that's pressed.
-  const globalListener = function (e /*, down: 當前按壓著的案件 map */) {
+  const globalListener = function (e, down /* 當前按壓著的案件 map */) {
     console.log(`${e.name}, ${e.state == 'DOWN' ? 'DOWN' : 'UP  '}, [${e.rawKey._nameRaw}]`)
+
+    if (e.name === 'ESCAPE') return void shutdown()
 
     const {
       name,
@@ -24,7 +26,7 @@ function start() {
   }
   v.addListener(globalListener)
 
-  setTimeout(() => {
+  function shutdown() {
     v.removeListener(globalListener)
 
     console.log("all these things that Iv'e done: ", things)
@@ -35,7 +37,7 @@ function start() {
       thing.timestamp -= miniTimestamp
 
       // 避免重複按壓造成多次記錄一樣的事件
-      const nextItem = things[index + 1]
+      let nextItem = things[index + 1]
       while (nextItem != null) {
         if (nextItem.state === thing.state && nextItem.rawKey === thing.rawKey) {
           things.splice(index + 1, 1)
@@ -45,7 +47,7 @@ function start() {
     }
 
     fs.writeFileSync('./result.json', JSON.stringify(things, null, 2))
-  }, 5000)
+  }
 }
 
 start()
