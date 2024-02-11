@@ -1,8 +1,8 @@
 import { GlobalKeyboardListener } from 'node-global-key-listener'
 import fs from 'fs'
 import { beforeStart } from './others.js'
-import ffi from 'ffi-napi'
 import path from 'path'
+import { pressAction } from './keyboard-action.js'
 
 const v = new GlobalKeyboardListener()
 
@@ -21,6 +21,7 @@ async function start() {
     timeoutList.push(
       setTimeout(() => {
         console.log(step)
+        pressAction(step.nameRaw, step.state)
         finishedCount++
 
         if (finishedCount === steps.length) v.removeListener(listener)
