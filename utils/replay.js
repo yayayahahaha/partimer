@@ -9,7 +9,8 @@ const v = new GlobalKeyboardListener()
 async function start() {
   await beforeStart(3)
 
-  const fileName = './behavior/result.json'
+  // const fileName = './behavior/result.json'
+  const fileName = './behavior/result-2.json'
 
   const file = fs.readFileSync(path.resolve(fileName), 'utf8')
   const steps = JSON.parse(file)

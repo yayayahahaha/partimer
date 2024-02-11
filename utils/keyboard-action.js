@@ -12,6 +12,12 @@ const keyValueMap = {
 
   VK_LMENU: 0x12,
 
+  VK_LSHIFT: 0xa0,
+
+  KEY_A: 0x41,
+
+  TEST: 0x54,
+
   VK_UP: 0x26,
   VK_LEFT: 0x25,
   VK_RIGHT: 0x27,
