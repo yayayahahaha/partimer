@@ -9,13 +9,16 @@ const v = new GlobalKeyboardListener()
 async function start() {
   await beforeStart(3)
 
+  // 讀取歷程檔案
   const fileName = './behavior/result.json'
-
   const file = fs.readFileSync(path.resolve(fileName), 'utf8')
   const steps = JSON.parse(file)
+
+  // 用於中斷的時候清除 timeout
+  const timeoutList = []
+
   let finishedCount = 0
 
-  const timeoutList = []
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i]
     const timer = setTimeout(() => {
