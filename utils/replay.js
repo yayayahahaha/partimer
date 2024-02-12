@@ -10,13 +10,26 @@ const keyMap = {
   VK_RIGHT: 'right',
   VK_LEFT: 'left',
   VK_LMENU: 'alt',
+
+  VK_2: '2',
+  VK_3: '3',
+  VK_A: 'a',
+  VK_D: 'd',
+  VK_DOWN: 'down',
+  VK_F: 'f',
+  VK_G: 'g',
+  VK_NUMPAD7: 'home',
+  VK_UP: 'up',
+  VK_V: 'v',
+  VK_W: 'w',
+  VK_Y: 'y',
 }
 
 async function start() {
   await beforeStart(3)
 
   // 讀取歷程檔案
-  const fileName = './behavior/result.json'
+  const fileName = './behavior/thunder.json'
   const file = fs.readFileSync(path.resolve(fileName), 'utf8')
   const steps = JSON.parse(file)
 

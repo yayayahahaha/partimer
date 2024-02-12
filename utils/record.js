@@ -5,7 +5,7 @@ import { beforeStart } from './others.js'
 const v = new GlobalKeyboardListener()
 
 async function start() {
-  await beforeStart(5)
+  await beforeStart(3)
 
   const things = []
 
