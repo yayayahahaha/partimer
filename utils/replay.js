@@ -23,6 +23,31 @@ const keyMap = {
   VK_V: 'v',
   VK_W: 'w',
   VK_Y: 'y',
+  VK_Y: 'r',
+}
+
+const attackMap = {
+  VK_V: {
+    coldTime: 0 * 1000,
+    previousTimestamp: 0,
+  },
+  VK_R: {
+    coldTime: 10 * 1000,
+    previousTimestamp: 0,
+  },
+
+  VK_G: {
+    coldTime: 9 * 1000,
+    previousTimestamp: 0,
+  },
+  VK_A: {
+    coldTime: 13 * 1000,
+    previousTimestamp: 0,
+  },
+  VK_Y: {
+    coldTime: 46 * 1000,
+    previousTimestamp: 0,
+  },
 }
 
 async function start() {
@@ -40,10 +65,49 @@ async function start() {
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i]
     const timer = setTimeout(() => {
-      console.log(step)
+      // console.log(step)
 
       if (keyMap[step.nameRaw] != null) {
-        rb.keyToggle(keyMap[step.nameRaw], step.state.toLowerCase())
+        // 根據冷卻時間來發動不同的技能?
+
+        if (attackMap[step.nameRaw] != null) {
+          // up 不做事
+          if (step.state.toLowerCase() !== 'up') {
+            // attack step
+            const flow = Math.random() > 0.5 ? ['VK_A', 'VK_G'] : ['VK_G', 'VK_A']
+            let everDo = false
+            for (let aIndex = 0; aIndex < flow.length; aIndex++) {
+              const skill = flow[aIndex]
+
+              false &&
+                console.log(
+                  skill,
+                  attackMap[skill].previousTimestamp,
+                  attackMap[skill].coldTime + Math.random() * 2000,
+                  Date.now() - attackMap[skill].previousTimestamp > attackMap[skill].coldTime + Math.random() * 2000,
+                  `everDo: ${everDo}`
+                )
+
+              if (Date.now() - attackMap[skill].previousTimestamp > attackMap[skill].coldTime + Math.random() * 2000) {
+                rb.keyToggle(keyMap[skill], 'down')
+                setTimeout(() => rb.keyToggle(keyMap[skill], 'up'), 180 + Math.random() * 50)
+                everDo = true
+
+                attackMap[skill].previousTimestamp = Date.now()
+
+                break
+              }
+            }
+
+            if (!everDo) {
+              rb.keyToggle(keyMap['VK_V'], 'down')
+              setTimeout(() => rb.keyToggle(keyMap['VK_V'], 'up'), 180 + Math.random() * 50)
+            }
+          }
+        } else {
+          // normal step
+          rb.keyToggle(keyMap[step.nameRaw], step.state.toLowerCase())
+        }
       } else {
         console.log(`傳入的 key 還沒有 map!`, step.nameRaw)
       }
