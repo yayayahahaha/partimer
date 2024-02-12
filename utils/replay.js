@@ -9,8 +9,7 @@ const v = new GlobalKeyboardListener()
 async function start() {
   await beforeStart(3)
 
-  // const fileName = './behavior/result.json'
-  const fileName = './behavior/result-2.json'
+  const fileName = './behavior/result.json'
 
   const file = fs.readFileSync(path.resolve(fileName), 'utf8')
   const steps = JSON.parse(file)
@@ -19,15 +18,16 @@ async function start() {
   const timeoutList = []
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i]
-    timeoutList.push(
-      setTimeout(() => {
-        console.log(step)
-        pressAction(step.nameRaw, step.state)
-        finishedCount++
+    const timer = setTimeout(() => {
+      console.log(step)
+      pressAction(step.nameRaw, step.state)
+      finishedCount++
 
-        if (finishedCount === steps.length) v.removeListener(listener)
-      }, step.timestamp)
-    )
+      if (finishedCount === steps.length) v.removeListener(listener)
+    }, step.timestamp)
+
+    // for remove
+    timeoutList.push(timer)
   }
 
   function listener(event) {
