@@ -11,9 +11,9 @@ dependencies:
   node-global-key-listener:
     specifier: ^0.1.1
     version: 0.1.1
-  ref-napi:
-    specifier: ^3.0.3
-    version: 3.0.3
+  node-key-sender:
+    specifier: ^1.0.11
+    version: 1.0.11
   tesseract.js:
     specifier: ^5.0.4
     version: 5.0.4
@@ -590,6 +590,10 @@ packages:
   /node-gyp-build@4.8.0:
     resolution: {integrity: sha512-u6fs2AEUljNho3EYTJNBfImO5QTo/J/1Etd+NVdCj7qWKUSN/bSLkZwhDv7I+w/MSC6qJ4cknepkAYykDdK8og==}
     hasBin: true
+    dev: false
+
+  /node-key-sender@1.0.11:
+    resolution: {integrity: sha512-vv2IXd8QdZBFYXaIy02uy2rK6EKj+tOTEuoTxJKS9l8zw8Cz6DeLffR8ompj7N2A3h6XK7aiy+YAcTaeOqwp2Q==}
     dev: false
 
   /once@1.4.0:
