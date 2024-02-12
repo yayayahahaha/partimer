@@ -2,9 +2,15 @@ import { GlobalKeyboardListener } from 'node-global-key-listener'
 import fs from 'fs'
 import { beforeStart } from './others.js'
 import path from 'path'
-import { pressAction } from './keyboard-action.js'
+import rb from 'robotjs'
 
 const v = new GlobalKeyboardListener()
+
+const keyMap = {
+  VK_RIGHT: 'right',
+  VK_LEFT: 'left',
+  VK_LMENU: 'alt',
+}
 
 async function start() {
   await beforeStart(3)
@@ -16,16 +22,20 @@ async function start() {
 
   // 用於中斷的時候清除 timeout
   const timeoutList = []
-
   let finishedCount = 0
 
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i]
     const timer = setTimeout(() => {
       console.log(step)
-      pressAction(step.nameRaw, step.state)
-      finishedCount++
 
+      if (keyMap[step.nameRaw] != null) {
+        rb.keyToggle(keyMap[step.nameRaw], step.state.toLowerCase())
+      } else {
+        console.log(`傳入的 key 還沒有 map!`, step.nameRaw)
+      }
+
+      finishedCount++
       if (finishedCount === steps.length) v.removeListener(listener)
     }, step.timestamp)
 
