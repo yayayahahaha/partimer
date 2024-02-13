@@ -33,7 +33,6 @@ async function start() {
     v.removeListener(globalListener)
 
     // console.log("all these things that Iv'e done: ", things)
-    fs.writeFileSync('./result-origin.json', JSON.stringify(things, null, 2))
     const minTimestamp = Math.min(...things.map((thing) => thing.timestamp))
     for (let i = 0; i < things.length; i++) {
       const current = things[i]

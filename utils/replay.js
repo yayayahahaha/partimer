@@ -19,11 +19,12 @@ const keyMap = {
   VK_F: 'f',
   VK_G: 'g',
   VK_NUMPAD7: 'home',
+  VK_HOME: 'home',
   VK_UP: 'up',
   VK_V: 'v',
+  VK_T: 't',
   VK_W: 'w',
   VK_Y: 'y',
-  VK_Y: 'r',
 }
 
 const attackMap = {
