@@ -14,29 +14,17 @@ async function captureScreenAndConvertToJimp() {
 
   const screenshot = robot.screen.capture(0, 0, width, height)
 
-  const image = new Jimp(screenshot.width, screenshot.height)
+  Jimp.read(screenshot.image).then((r) => console.log(r))
 
-  console.time('1')
+  // image.write('./text.png')
 
-  // https://stackoverflow.com/questions/43881571/how-to-save-binary-buffer-to-png-file-in-nodejs/43881698#43881698
-  for (let x = 0; x < width; x++) {
-    for (let y = 0; y < height; y++) {
-      // hex is a string, rrggbb format
-      const hex = screenshot.colorAt(x, y)
-      // Jimp expects an Int, with RGBA data,
-      // so add FF as 'full opaque' to RGB color
-      const num = parseInt(hex + 'ff', 16)
-      // Set pixel manually
-      image.setPixelColor(num, x, y)
-    }
-  }
+  return null
 
-  console.timeEnd('1')
-
-  image.write('./text.png')
-
-  return image.getBufferAsync(Jimp.MIME_PNG)
+  // return image.getBufferAsync(.MIME_PNG)
   // return image.getBase64Async(Jimp.MIME_PNG)
+
+  // 這個太慢了
+  // https://stackoverflow.com/questions/43881571/how-to-save-binary-buffer-to-png-file-in-nodejs/43881698#43881698
 }
 
 // 使用 Tesseract.js 辨識圖像中的文字
@@ -57,6 +45,8 @@ async function main() {
   try {
     // 擷取螢幕截圖並轉換為 Jimp 圖像
     const imageBuffer = await captureScreenAndConvertToJimp()
+
+    return
 
     // 使用 Tesseract.js 辨識圖像中的文字
     const recognizedText = await recognizeText(imageBuffer)
