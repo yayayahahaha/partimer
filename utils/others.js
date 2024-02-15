@@ -21,13 +21,15 @@ async function beforeStart(sec = 5) {
 function getApplicationInfo(showConsole = true) {
   const applicationTitle = getForegroundWindowTitle()
   const { left: x, top: y, right: endX, bottom: endY } = getForegroundWindowRect()
+  const width = endX - x
+  const height = endY - y
 
   if (showConsole) {
     console.log(`Foreground application title: ${applicationTitle}`)
     console.log(`Application cordinatins: x: ${x}, y: ${y}, endX: ${endX}, endY: ${endY}`)
   }
 
-  return { applicationTitle, x, y, endX, endY }
+  return { applicationTitle, x, y, endX, endY, width, height }
 }
 
 async function buy(buyTimes = 1, eachRoundItems = 10) {
@@ -102,7 +104,7 @@ function displayMousePosition() {
   setInterval(() => {
     const [ax, ay] = getCurrentCoordinate()
     console.log('absolute position: ', ax, ay)
-    console.log('application position: ',x ,y)
+    console.log('application position: ', x, y)
     console.log('offset position: ', ax - x, ay - y)
     console.log()
   }, 1000)
