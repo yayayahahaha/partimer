@@ -1,5 +1,5 @@
 import rb from 'robotjs'
-import { beforeStart, getApplicationInfo } from './others.js'
+import { getApplicationInfo } from './others.js'
 import fs from 'fs'
 import Jimp from 'jimp'
 
@@ -25,15 +25,6 @@ function getMiniMapBitMap() {
   const miniMapOffset = { x: 10, y: 30, miniWidth: 170, miniHeight: 135 }
 
   return rb.screen.capture(x + miniMapOffset.x, y + miniMapOffset.y, miniMapOffset.miniWidth, miniMapOffset.miniHeight)
-}
-
-async function start() {
-  await beforeStart(3)
-
-  const miniMap = getMiniMapBitMap()
-
-  // 預覽用
-  // screenCaptureToFile2(miniMap, 'image.png')
 }
 
 function hasColor(target = USER_COLOR, { writefile = false, consoleRing = false } = {}) {
@@ -79,6 +70,4 @@ function screenCaptureToFile2(robotScreenPic, path) {
   })
 }
 
-start()
-
-export { screenCaptureToFile2, ringring, hasColor }
+export { screenCaptureToFile2, ringring, hasColor, USER_COLOR, PURPLE_COLOR, getMiniMapBitMap }

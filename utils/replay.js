@@ -1,8 +1,8 @@
 import { GlobalKeyboardListener } from 'node-global-key-listener'
 import fs from 'fs'
-import { beforeStart } from './others.js'
 import path from 'path'
 import rb from 'robotjs'
+import { hasColor, PURPLE_COLOR, USER_COLOR } from './screen.js'
 
 const keyMap = {
   VK_RIGHT: 'right',
@@ -62,6 +62,12 @@ function replayStar(type = THUNDER_STAR) {
   const fileName = type
   const file = fs.readFileSync(path.resolve(fileName), 'utf8')
   const steps = JSON.parse(file)
+
+  // 檢查顏色
+  setInterval(() => {
+    hasColor(PURPLE_COLOR)
+    // hasColor(USER_COLOR)
+  }, 3000)
 
   // 用於中斷的時候清除 timeout
   const timeoutList = []
@@ -137,4 +143,10 @@ function replayStar(type = THUNDER_STAR) {
   return promise
 }
 
-export { replayStar }
+async function go(times = 3) {
+  for (let i = 0; i < times; i++) {
+    await replayStar()
+  }
+}
+
+export { replayStar, go }
