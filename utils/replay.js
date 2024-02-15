@@ -4,8 +4,6 @@ import { beforeStart } from './others.js'
 import path from 'path'
 import rb from 'robotjs'
 
-const v = new GlobalKeyboardListener()
-
 const keyMap = {
   VK_RIGHT: 'right',
   VK_LEFT: 'left',
@@ -51,11 +49,17 @@ const attackMap = {
   },
 }
 
-async function start() {
-  await beforeStart(3)
+const THUNDER_STAR = './behavior/thunder.json'
+function replayStar(type = THUNDER_STAR) {
+  let resolveFunction = null
+  const promise = new Promise((resolve) => {
+    resolveFunction = resolve
+  })
+
+  const v = new GlobalKeyboardListener()
 
   // 讀取歷程檔案
-  const fileName = './behavior/thunder.json'
+  const fileName = type
   const file = fs.readFileSync(path.resolve(fileName), 'utf8')
   const steps = JSON.parse(file)
 
@@ -65,64 +69,62 @@ async function start() {
 
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i]
-    const timer = setTimeout(() => {
-      // console.log(step)
 
-      if (keyMap[step.nameRaw] != null) {
-        // 根據冷卻時間來發動不同的技能?
+    if (keyMap[step.nameRaw] == null) {
+      console.log(`傳入的 key 還沒有 map!`, step.nameRaw)
+      continue
+    }
 
-        if (attackMap[step.nameRaw] != null) {
-          // up 不做事
-          if (step.state.toLowerCase() !== 'up') {
-            // attack step
-            const flow = Math.random() > 0.5 ? ['VK_A', 'VK_G'] : ['VK_G', 'VK_A']
-            let everDo = false
-            for (let aIndex = 0; aIndex < flow.length; aIndex++) {
-              const skill = flow[aIndex]
+    const eachStepTimer = setTimeout(() => {
+      // for quick return
+      ;(() => {
+        // 如果不是攻擊技能，就直接操作
+        if (attackMap[step.nameRaw] == null) return void rb.keyToggle(keyMap[step.nameRaw], step.state.toLowerCase())
 
-              false &&
-                console.log(
-                  skill,
-                  attackMap[skill].previousTimestamp,
-                  attackMap[skill].coldTime + Math.random() * 2000,
-                  Date.now() - attackMap[skill].previousTimestamp > attackMap[skill].coldTime + Math.random() * 2000,
-                  `everDo: ${everDo}`
-                )
+        // 如果是攻擊技能的話，有一些判斷
+        // up 不做事
+        if (step.state.toLowerCase() === 'up') return
 
-              if (Date.now() - attackMap[skill].previousTimestamp > attackMap[skill].coldTime + Math.random() * 2000) {
-                rb.keyToggle(keyMap[skill], 'down')
-                setTimeout(() => rb.keyToggle(keyMap[skill], 'up'), 180 + Math.random() * 50)
-                everDo = true
+        // 是攻擊技能、也不是 up 的話，根據冷卻時間隨機發動技能
+        const flow = Math.random() > 0.5 ? ['VK_A', 'VK_G'] : ['VK_G', 'VK_A']
+        let everDo = false
+        for (let aIndex = 0; aIndex < flow.length; aIndex++) {
+          const skill = flow[aIndex]
+          const { previousTimestamp, coldTime } = attackMap[skill]
 
-                attackMap[skill].previousTimestamp = Date.now()
+          // 如果還在 cooldown 的話，
+          const isInCoolDown = previousTimestamp + coldTime + Math.random() * 2000 > Date.now()
+          if (isInCoolDown) continue
 
-                break
-              }
-            }
-
-            if (!everDo) {
-              rb.keyToggle(keyMap['VK_V'], 'down')
-              setTimeout(() => rb.keyToggle(keyMap['VK_V'], 'up'), 180 + Math.random() * 50)
-            }
-          }
-        } else {
-          // normal step
-          rb.keyToggle(keyMap[step.nameRaw], step.state.toLowerCase())
+          rb.keyToggle(keyMap[skill], 'down')
+          setTimeout(() => rb.keyToggle(keyMap[skill], 'up'), 130 + Math.random() * 50)
+          attackMap[skill].previousTimestamp = Date.now()
+          everDo = true
+          break
         }
-      } else {
-        console.log(`傳入的 key 還沒有 map!`, step.nameRaw)
-      }
+
+        // 如果沒有發動過上述技能的話，有一個基本的
+        if (!everDo) {
+          rb.keyToggle(keyMap['VK_V'], 'down')
+          setTimeout(() => rb.keyToggle(keyMap['VK_V'], 'up'), 130 + Math.random() * 50)
+        }
+      })()
 
       finishedCount++
-      if (finishedCount === steps.length) v.removeListener(listener)
+      if (finishedCount === steps.length) finished()
     }, step.timestamp)
 
     // for remove
-    timeoutList.push(timer)
+    timeoutList.push(eachStepTimer)
+  }
+
+  function finished() {
+    v.removeListener(listener)
+    resolveFunction()
   }
 
   function listener(event) {
-    // 按下 esc 的時候終止
+    // 按下 esc 的時候終止, 不知道為什麼有時候會失效，應該是 stack 的問題
     if (event.name === 'ESCAPE') {
       timeoutList.forEach((timer) => clearTimeout(timer))
       console.log('Dinner time!')
@@ -131,6 +133,8 @@ async function start() {
     }
   }
   v.addListener(listener)
+
+  return promise
 }
 
-start()
+export { replayStar }
