@@ -3,10 +3,11 @@ import { getApplicationInfo } from './others.js'
 import fs from 'fs'
 import Jimp from 'jimp'
 
-const USER_COLOR = 'ffdd44'
-const PURPLE_COLOR = 'dd66ff'
+export const USER_COLOR = 'ffdd44'
+export const OTHER_USER_COLOR = 'ee0000'
+export const PURPLE_COLOR = 'dd66ff'
 
-async function ringring(times = 10, interval = 500) {
+export function ringring(times = 10, interval = 500) {
   let finishedCount = 0
   return new Promise((resolve) => {
     for (let i = 0; i < times; i++) {
@@ -20,15 +21,23 @@ async function ringring(times = 10, interval = 500) {
   })
 }
 
-function getMiniMapBitMap() {
+export function getMiniMapBitMap({ createImage = false } = {}) {
   const { x, y, width: appWidth, height: appHeight } = getApplicationInfo(false)
   const miniMapOffset = { x: 10, y: 30, miniWidth: 170, miniHeight: 135 }
 
-  return rb.screen.capture(x + miniMapOffset.x, y + miniMapOffset.y, miniMapOffset.miniWidth, miniMapOffset.miniHeight)
+  const miniMapBitMap = rb.screen.capture(
+    x + miniMapOffset.x,
+    y + miniMapOffset.y,
+    miniMapOffset.miniWidth,
+    miniMapOffset.miniHeight
+  )
+  if (createImage) screenCaptureToFile2(miniMapBitMap, `image-${Date.now()}.png`)
+
+  return miniMapBitMap
 }
 
-function hasColor(target = USER_COLOR, { writefile = false, consoleRing = false } = {}) {
-  const miniMapBitMap = getMiniMapBitMap()
+export function hasColor(target = USER_COLOR, { writefile = false, consoleRing = false, createImage = false } = {}) {
+  const miniMapBitMap = getMiniMapBitMap({ createImage })
 
   const list = []
   let everUserRinging = false
@@ -51,7 +60,7 @@ function hasColor(target = USER_COLOR, { writefile = false, consoleRing = false 
 }
 
 // https://stackoverflow.com/questions/41941151/capture-and-save-image-with-robotjs
-function screenCaptureToFile2(robotScreenPic, path) {
+export function screenCaptureToFile2(robotScreenPic, path) {
   return new Promise((resolve, reject) => {
     try {
       const image = new Jimp(robotScreenPic.width, robotScreenPic.height)
@@ -70,4 +79,19 @@ function screenCaptureToFile2(robotScreenPic, path) {
   })
 }
 
-export { screenCaptureToFile2, ringring, hasColor, USER_COLOR, PURPLE_COLOR, getMiniMapBitMap }
+// this one needs to be copied
+function showOnBrowser(list = []) {
+  for (let i = 0; i < list.length; i++) {
+    const div = document.createElement('div')
+
+    for (let j = 0; j < list[i].length; j++) {
+      const color = document.createElement('div')
+      color.style.width = '2px'
+      color.style.height = '2px'
+      color.style.backgroundColor = `#${list[i][j]}`
+      color.style.display = 'inline-block'
+      div.appendChild(color)
+    }
+    document.body.append(div)
+  }
+}

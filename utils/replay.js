@@ -2,7 +2,7 @@ import { GlobalKeyboardListener } from 'node-global-key-listener'
 import fs from 'fs'
 import path from 'path'
 import rb from 'robotjs'
-import { hasColor, PURPLE_COLOR, USER_COLOR } from './screen.js'
+import { hasColor, PURPLE_COLOR, OTHER_USER_COLOR, USER_COLOR } from './screen.js'
 
 const keyMap = {
   VK_RIGHT: 'right',
@@ -66,6 +66,7 @@ function replayStar(type = THUNDER_STAR) {
   // 檢查顏色
   setInterval(() => {
     hasColor(PURPLE_COLOR)
+    hasColor(OTHER_USER_COLOR)
     // hasColor(USER_COLOR)
   }, 3000)
 
