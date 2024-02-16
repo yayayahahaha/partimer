@@ -1,72 +1,84 @@
 import robot from 'robotjs'
 import Jimp from 'jimp'
 import { createWorker } from 'tesseract.js'
+import { beforeStart, getApplicationInfo } from './others.js'
 
+// TODO 這個可以和 screen 那邊的做整合
 // 擷取螢幕截圖並轉換為 Jimp 圖像
 async function captureScreenAndConvertToJimp() {
-  // 擷取螢幕截圖
-  const { width: originWidth, height: originHeight } = robot.getScreenSize()
+  const { x, y, width, height } = getApplicationInfo()
+  const screenshot = robot.screen.capture(x, y, width, height)
 
-  const width = originWidth / 3
-  const height = originHeight / 3
-  console.log('width: ', width)
-  console.log('height: ', height)
+  // 這個東西居然只在 windows 有效我的天, 不過目前這樣出來的會有顏色的問題
+  return new Promise((resolve) => {
+    const image = new Jimp(width, height)
+    let pos = 0
+    image.scan(0, 0, image.bitmap.width, image.bitmap.height, (x, y, idx) => {
+      image.bitmap.data[idx + 2] = screenshot.image.readUInt8(pos++)
+      image.bitmap.data[idx + 1] = screenshot.image.readUInt8(pos++)
+      image.bitmap.data[idx + 0] = screenshot.image.readUInt8(pos++)
+      image.bitmap.data[idx + 3] = screenshot.image.readUInt8(pos++)
+    })
 
-  const screenshot = robot.screen.capture(0, 0, width, height)
+    image
+      .quality(100) // 銳利化
+      .greyscale() // 轉為灰階
+      .contrast(0.7) // 提高對比度
+      .invert() // 反轉顏色
 
-  Jimp.read(screenshot.image).then((r) => console.log(r))
+    image.write('text-text.png')
 
-  // image.write('./text.png')
+    resolve(image.getBufferAsync(Jimp.AUTO))
+  })
 
-  return null
-
-  // return image.getBufferAsync(.MIME_PNG)
-  // return image.getBase64Async(Jimp.MIME_PNG)
-
-  // 這個太慢了
+  // 這個雖然 widnow 和 mac 都可以，但太慢了, 還沒有去找找看有沒有其他方式
   // https://stackoverflow.com/questions/43881571/how-to-save-binary-buffer-to-png-file-in-nodejs/43881698#43881698
 }
 
 // 使用 Tesseract.js 辨識圖像中的文字
 async function recognizeText(imageBuffer) {
-  const worker = await createWorker('eng')
+  // 設置引擎參數
+  const config = {
+    lang: 'eng+chi_tra', // 要辨識的語言
+    oem: 1, // OCR 引擎模式 (1 表示 Tesseract)
+    psm: 0, // Page Segmentation Mode (3 表示單一行)
+    // tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', // 字元白名單
+    // tessedit_char_blacklist: '@#$%^&*()_+=-<>?/.,\'":;{}[]~`', // 字元黑名單
+    // 更多參數可以參考 Tesseract.js 的文檔
+  }
+
+  const worker = await createWorker('eng+chi_tra')
+  // const worker = await createWorker(config)
 
   ;(async () => {
     const {
       data: { text },
     } = await worker.recognize(imageBuffer)
-    console.log('text:', text)
+    console.log()
+    console.log()
+    console.log(text)
     await worker.terminate()
   })()
 }
 
 // 主函式
 async function main() {
+  await beforeStart(3)
+
   try {
     // 擷取螢幕截圖並轉換為 Jimp 圖像
+    console.time('imageBuffer')
     const imageBuffer = await captureScreenAndConvertToJimp()
-
-    return
+    console.timeEnd('imageBuffer')
 
     // 使用 Tesseract.js 辨識圖像中的文字
     const recognizedText = await recognizeText(imageBuffer)
-    console.log('recognizedText:', recognizedText)
-
     return
 
     // 判斷是否包含特定文字
-    const targetText = 'your_target_text'
-    if (recognizedText.includes(targetText)) {
-      console.log(`圖像中包含指定文字: ${targetText}`)
-    } else {
-      console.log(`圖像中未包含指定文字: ${targetText}`)
-    }
   } catch (error) {
     console.error('錯誤:', error)
   }
 }
 
-// 執行主函式
-setTimeout(() => {
-  main()
-}, 2000)
+main()
