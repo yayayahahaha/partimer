@@ -7,9 +7,10 @@ async function start() {
 
   // displayMousePosition()
 
-  // buy(8)
-  extract(40)
-  // go()
+  // buy(4, 9)
+  // extract(60)
+  go(3, './behavior/tears-2.json')
+  // go(3, './behavior/power-man.json')
   // anotherGo()
 }
 

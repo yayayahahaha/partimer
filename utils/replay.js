@@ -8,6 +8,7 @@ const keyMap = {
   VK_RIGHT: 'right',
   VK_LEFT: 'left',
   VK_LMENU: 'alt',
+  VK_END: 'end',
 
   VK_2: '2',
   VK_3: '3',
@@ -24,6 +25,7 @@ const keyMap = {
   VK_T: 't',
   VK_W: 'w',
   VK_Y: 'y',
+  VK_R: 'r',
   VK_DELETE: 'delete',
   VK_NEXT: 'pagedown',
 }
@@ -143,9 +145,10 @@ function replayStar(type = THUNDER_STAR) {
   return promise
 }
 
-async function go(times = 3) {
+async function go(times = 3, type) {
   for (let i = 0; i < times; i++) {
-    await replayStar()
+    console.log('type: ', type)
+    await replayStar(type)
   }
 }
 
