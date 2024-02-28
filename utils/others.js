@@ -3,6 +3,7 @@
 import { getForegroundWindowRect, getForegroundWindowTitle } from './application-control.js'
 import { pressEnter } from './keyboard-action.js'
 import { clickMouse, moveMouseWithBezier, getCurrentCoordinate, clickRightMouse } from './mouse-control.js'
+import rb from 'robotjs'
 
 const delay = (milSec = 200, randomSec = 100) =>
   new Promise((r) => {
@@ -185,4 +186,37 @@ async function extract(itemsCount = 10) {
   }
 }
 
-export { delay, beforeStart, getApplicationInfo, buy, extract, displayMousePosition }
+async function ocean() {
+  const knife = {
+    key: 't',
+    current: 0,
+    wait: 11 * 1000,
+  }
+  const wind = {
+    key: 'f',
+    current: 0,
+    wait: 13 * 1000,
+  }
+
+  let count = 0
+  setInterval(() => {
+    const list = [knife, wind]
+    for (let i = 0; i < list.length; i++) {
+      const item = list[i]
+
+      if (Date.now() - item.current > item.wait) {
+        rb.keyTap(count % 2 === 0 ? 'left' : 'right')
+        delay()
+
+        rb.keyTap(item.key)
+        delay()
+        item.current = Date.now()
+        break
+      }
+    }
+
+    count++
+  }, 1000)
+}
+
+export { delay, beforeStart, getApplicationInfo, buy, extract, displayMousePosition, ocean }
