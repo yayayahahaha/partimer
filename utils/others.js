@@ -214,7 +214,16 @@ async function buyByOffset(config) {
   await setPriceAndLevel(x, y, { 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset, price, level })
 
   // 等待查詢結果
-  await waitUntil({ x, y, message: '搜尋結果', maxWait: 10 * 1000, place: 'result', test: true })
+  await Promise.race([
+    waitUntil({
+      x,
+      y,
+      message: ['搜尋結果', '查無此道具。'],
+      maxWait: 10 * 1000,
+      place: ['result', 'center'],
+      test: true,
+    }),
+  ])
 
   if (!(await checkPage(x, y))) {
     console.log('沒有頁碼!')
@@ -392,6 +401,7 @@ function getApplicationInfo(showConsole = true) {
   return { applicationTitle, x, y, endX, endY, width, height }
 }
 
+// TODO 這個蠻好用的，可以改寫放到其他地方試試看
 async function waitUntil({ x, y, message, maxWait = 5000, interval = 100, place = 'center', test = false } = {}) {
   let stopTry = false
 
@@ -413,32 +423,54 @@ async function waitUntil({ x, y, message, maxWait = 5000, interval = 100, place 
       return checkMessage()
 
       async function checkMessage() {
-        // 這個可以改寫..
-        const screenMessage =
-          place === 'center'
-            ? await getCenterMessage(x, y)
-            : place === 'extract'
-              ? await getExtractMessage(x, y)
-              : place === 'town'
-                ? await getTownName(x, y)
-                : place === 'market-title'
-                  ? await getMarketTitle(x, y)
-                  : place === 'market-search'
-                    ? await getMarketSearch(x, y)
-                    : place === 'result'
-                      ? await getMarketResult(x, y)
-                      : () => null
+        if (!Array.isArray(message)) {
+          // TODO 改寫法
+          message = [[message]]
+        } else if (message.every((m) => Array.isArray(m))) {
+          message = message.map((m) => [m])
+        }
 
-        test && console.log('waitUntil:', JSON.stringify(screenMessage), JSON.stringify(message))
+        if (!Array.isArray(place)) {
+          // TODO 改寫法
+          place = [place]
+        }
 
-        if (Array.isArray(message)) {
-          if (message.some((str) => screenMessage.match(new RegExp(str)))) {
-            resolve(true)
+        const fList = place.map((place, i) => {
+          switch (place) {
+            case 'center':
+              return { fn: getCenterMessage, message: message[i] || null }
 
-            // 避免 nodejs 卡住
-            return void setTimeout(delayResolve, 100)
+            case 'extract':
+              return { fn: getExtractMessage, message: message[i] || null }
+
+            case 'town':
+              return { fn: getTownName, message: message[i] || null }
+
+            case 'market-title':
+              return { fn: getMarketTitle, message: message[i] || null }
+
+            case 'market-search':
+              return { fn: getMarketSearch, message: message[i] || null }
+
+            case 'result':
+              return { fn: getMarketResult, message: message[i] || null }
           }
-        } else if (screenMessage.match(new RegExp(message))) {
+        })
+
+        let result = false
+        for (let i = 0; i < fList.length; i++) {
+          const { fn, message } = fList[i]
+          const imgText = await fn(x, y)
+          let messageList = message
+
+          test && console.log('waitUntil:', JSON.stringify(imgText), JSON.stringify(message))
+
+          if (!Array.isArray(messageList)) messageList = [messageList]
+
+          result = result || messageList.some((str) => imgText.match(new RegExp(str)))
+          if (result) break
+        }
+        if (result) {
           resolve(true)
 
           // 避免 nodejs 卡住
