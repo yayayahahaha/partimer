@@ -19,6 +19,7 @@ function _keyIn(str) {
   }
 }
 
+const bagSize = 7 // TEST codes
 const searchOffset = { x: 120, y: 120 }
 const firstItemOffset = { x: 950, y: 230 }
 const buyButtonOffset = { x: 950, y: 750 }
@@ -33,9 +34,15 @@ const 中央訊息右下_offset = { x: 583, y: 437 }
 const 查詢_offset = { x: 115, y: 126 }
 const 完成_offset = { x: 931, y: 128 }
 const 領取_offset = { x: 969, y: 167 }
+const 分解訊息左上_offset = { x: 650, y: 473 }
+const 分解訊息右下_offset = { x: 730, y: 500 }
 
 function getCenterMessage(x, y) {
   return getTextByOffset(x, y, 中央訊息左上_offset, 中央訊息右下_offset, 'chi_tra')
+}
+
+function getExtractMessage(x, y) {
+  return getTextByOffset(x, y, 分解訊息左上_offset, 分解訊息右下_offset, 'chi_tra')
 }
 
 async function isHasResult(x, y) {
@@ -59,20 +66,27 @@ async function isHasResult(x, y) {
 
 async function checkPage(x, y) {
   const pageText = await getTextByOffset(x, y, 頁碼左上_offset, 頁碼右下_offset)
-  if (!/\d+\/\d+/.test(pageText)) {
-    console.log('沒有頁碼!')
-    return null
-  }
-  if (pageText === '0/0') {
-    console.log('沒了!')
-    return null
-  }
+
+  if (!/\d+\/\d+/.test(pageText)) return null
+  if (pageText === '0/0') return null
 
   return true
 }
 
-async function buyByOffset(config, { price = 40000, level = 108 } = {}) {
-  const { x, y, 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset } = config
+async function buyByOffset(config) {
+  const {
+    x,
+    y,
+    標題_offset,
+    重置_offset,
+    等級_offset,
+    價格_offset,
+    搜尋_offset,
+
+    price = 40000,
+    level = 108,
+    boughtNumber: preBoughtNumber = 0,
+  } = config
 
   _moveMouseByOffset(x, y, 標題_offset)
   await delay(50)
@@ -103,29 +117,59 @@ async function buyByOffset(config, { price = 40000, level = 108 } = {}) {
   clickMouse()
   await delay(50)
   pressEnter()
+
+  // 等待查詢結果
   await delay(1000) // TODO 改成圖像查詢?
 
-  if (!(await isHasResult(x, y))) return false
+  if (!(await isHasResult(x, y))) {
+    console.log('沒有結果!')
+    return preBoughtNumber
+  }
 
-  if (!(await checkPage(x, y))) return
-  console.log('開買!')
-  let boughtNumber = 0
+  if (!(await checkPage(x, y))) {
+    console.log('沒有頁碼!')
+    return preBoughtNumber
+  }
 
-  boughtNumber += await _buyRecursive()
+  let boughtNumber = preBoughtNumber
+  await buyRoundRecursive()
 
-  await recieveItems(x, y)
+  console.log(`總共買了 ${boughtNumber} 個!`)
+  console.log('')
+  return boughtNumber
 
-  async function _buyRecursive(currentBuy = 0) {
+  async function buyRoundRecursive() {
+    await _buyRecursive()
+    await recieveItems(x, y)
+
+    await goToSearch(x, y)
+
+    if (boughtNumber < bagSize && (await checkPage(x, y))) {
+      await buyRoundRecursive()
+    }
+  }
+
+  async function _buyRecursive(previousBuy = 0) {
+    if (!(await checkPage(x, y))) return previousBuy
+
+    // 超過包包了
+    if (boughtNumber >= bagSize) return previousBuy
+
     await buySingle(x, y)
-    const current = currentBuy + 1
+    const currentBuy = previousBuy + 1
+    boughtNumber += 1
+    console.log(`目前買了 ${boughtNumber} 個`)
 
-    if (!(await checkPage(x, y))) return currentBuy
+    // TEST codes
+    // if (currentBuy === 10) return currentBuy
+    if (currentBuy === 3) return currentBuy
 
-    if (current === 10) return currentBuy
-    return _buyRecursive(current)
+    return _buyRecursive(currentBuy)
   }
 }
-async function 買防具(x, y) {
+async function 買防具(x, y, boughtNumber) {
+  console.log('開始買防具')
+
   const 防具_offset = { x: 135, y: 168 }
   const 防具重置_offset = { x: 135, y: 629 }
   const 防具等級_offset = { x: 106, y: 369 }
@@ -140,9 +184,12 @@ async function 買防具(x, y) {
     等級_offset: 防具等級_offset,
     價格_offset: 防具價格_offset,
     搜尋_offset: 防具搜尋_offset,
+    boughtNumber,
   })
 }
-async function 買武器(x, y) {
+async function 買武器(x, y, boughtNumber) {
+  console.log('開始買武器')
+
   const 武器_offset = { x: 147, y: 670 }
   const 武器重置_offset = { x: 136, y: 631 }
   const 武器等級_offset = { x: 118, y: 368 }
@@ -157,19 +204,28 @@ async function 買武器(x, y) {
     等級_offset: 武器等級_offset,
     價格_offset: 武器價格_offset,
     搜尋_offset: 武器搜尋_offset,
+    boughtNumber,
   })
 }
 
 export async function market() {
   const { x, y } = getApplicationInfo()
 
+  console.log('包包容量: ', bagSize)
+
+  let boughtNumber = 0
+
   await goToSearch(x, y)
+  boughtNumber += await 買防具(x, y, boughtNumber)
 
-  await 買防具(x, y)
+  if (boughtNumber >= bagSize) {
+    console.log('達到上限了!')
+    console.log(`這次買了 ${boughtNumber} 個`)
+    return
+  }
 
   await goToSearch(x, y)
-
-  await 買武器(x, y)
+  await 買武器(x, y, boughtNumber)
 }
 
 async function goToSearch(x, y) {
@@ -220,18 +276,29 @@ function getApplicationInfo(showConsole = true) {
   return { applicationTitle, x, y, endX, endY, width, height }
 }
 
-async function waitUntil(x, y, message, maxWait = 5000, interval = 500) {
+async function waitUntil({ x, y, message, maxWait = 5000, interval = 500, place = 'center' } = {}) {
+  let stopTry = false
+
   return Promise.race([
-    delay(maxWait),
+    delay(maxWait).then(() => {
+      stopTry = true
+    }),
     new Promise((resolve) => {
       return checkMessage()
 
       async function checkMessage() {
-        const centerMessage = await getCenterMessage(x, y)
+        const centerMessage = place === 'center' ? await getCenterMessage(x, y) : await getExtractMessage(x, y)
 
+        // testing codes
         console.log('waitUntil:', JSON.stringify(centerMessage), JSON.stringify(message))
 
-        if (centerMessage.match(new RegExp(message))) return resolve(true)
+        if (Array.isArray(message)) {
+          if (message.some((str) => centerMessage.match(new RegExp(str)))) {
+            return resolve(true)
+          }
+        } else if (centerMessage.match(new RegExp(message))) return resolve(true)
+
+        if (stopTry) return resolve(null)
 
         return setTimeout(checkMessage, interval)
       }
@@ -256,7 +323,12 @@ async function recieveItems(x, y) {
   await delay()
   pressEnter()
 
-  await waitUntil(x, y, '已完成', 10000)
+  await waitUntil({
+    x,
+    y,
+    message: '已完成',
+    maxWait: 15 * 1000,
+  })
 
   pressEnter()
   await delay()
@@ -275,16 +347,12 @@ async function buySingle(x, y) {
   await delay()
 
   pressEnter()
-  const buyResult = await waitUntil(x, y, '成功')
-  if (buyResult == null) {
-    const noSpace = await waitUntil(x, y, '不足')
-    if (noSpace != null) return recieveItems(x, y)
-
-    const notExist = await waitUntil(x, y, '不存在')
-    if (notExist != null) {
-      console.log('被搶先了')
-    }
-  }
+  await waitUntil({
+    x,
+    y,
+    message: ['成功', '不足', '不存在'],
+    maxWait: 10 * 1000,
+  })
 
   pressEnter()
   await delay()
@@ -384,9 +452,9 @@ async function extract(itemsCount = 10) {
 
   for (let index = 1; index <= itemsCount; index++) {
     _moveMouseByOffset(x, y, offset, { randomX: 3, randomY: 3 })
-    await delay()
+    await delay(50)
     clickRightMouse()
-    await delay()
+    await delay(50)
 
     const { row: nRow, column: nColumn } = _toNextRowColumn(row, column)
     row = nRow
@@ -401,7 +469,14 @@ async function extract(itemsCount = 10) {
       pressEnter()
       await delay()
 
-      await delay(4000)
+      await waitUntil({
+        x,
+        y,
+        message: '分解完成',
+        maxWait: 4 * 1000,
+        interval: 200,
+        place: 'extract',
+      })
 
       pressEnter()
       await delay()
