@@ -221,7 +221,6 @@ async function buyByOffset(config) {
       message: ['搜尋結果', '查無此道具。'],
       maxWait: 10 * 1000,
       place: ['result', 'center'],
-      test: true,
     }),
   ])
 
