@@ -48,15 +48,9 @@ async function isHasResult(x, y) {
   const resultText = await getTextByOffset(x, y, 搜尋結果左上_offset, 搜尋結果右下_offset, 'chi_tra')
   const centerText = await getCenterMessage(x, y)
 
-  if (centerText === '查無此道具。') {
-    console.log('查無此道具。!')
-    return false
-  }
+  if (centerText === '查無此道具。') return false
 
-  if (resultText !== '搜尋結果') {
-    console.log('沒有搜尋結果!')
-    return false
-  }
+  if (resultText !== '搜尋結果') return false
 
   if (!(await checkPage(x, y))) return false
 
@@ -86,6 +80,8 @@ async function buyByOffset(config) {
     level = 108,
     boughtNumber: preBoughtNumber = 0,
   } = config
+
+  await goToSearch(x, y)
 
   _moveMouseByOffset(x, y, 標題_offset)
   await delay(50)
@@ -134,7 +130,6 @@ async function buyByOffset(config) {
   await buyRoundRecursive()
 
   console.log(`總共買了 ${boughtNumber} 個!`)
-  console.log('')
   return boughtNumber
 
   async function buyRoundRecursive() {
@@ -163,8 +158,8 @@ async function buyByOffset(config) {
     return _buyRecursive(currentBuy)
   }
 }
-async function 買防具(x, y, boughtNumber) {
-  console.log('開始買防具')
+async function 買防具({ x, y, boughtNumber, price, level, message = '開始買防具' } = {}) {
+  console.log(message)
 
   const 防具_offset = { x: 135, y: 168 }
   const 防具重置_offset = { x: 135, y: 629 }
@@ -175,6 +170,8 @@ async function 買防具(x, y, boughtNumber) {
   return buyByOffset({
     x,
     y,
+    price,
+    level,
     標題_offset: 防具_offset,
     重置_offset: 防具重置_offset,
     等級_offset: 防具等級_offset,
@@ -183,8 +180,8 @@ async function 買防具(x, y, boughtNumber) {
     boughtNumber,
   })
 }
-async function 買武器(x, y, boughtNumber) {
-  console.log('開始買武器')
+async function 買武器({ x, y, boughtNumber, price, level, message = '開始買武器' } = {}) {
+  console.log(message)
 
   const 武器_offset = { x: 147, y: 670 }
   const 武器重置_offset = { x: 136, y: 631 }
@@ -195,6 +192,8 @@ async function 買武器(x, y, boughtNumber) {
   return buyByOffset({
     x,
     y,
+    price,
+    level,
     標題_offset: 武器_offset,
     重置_offset: 武器重置_offset,
     等級_offset: 武器等級_offset,
@@ -204,6 +203,16 @@ async function 買武器(x, y, boughtNumber) {
   })
 }
 
+function checkMax(boughtNumber, bagSize) {
+  if (boughtNumber >= bagSize) {
+    console.log('達到上限了!')
+    console.log(`這次買了 ${boughtNumber} 個`)
+    return false
+  }
+
+  return true
+}
+
 export async function market() {
   const { x, y } = getApplicationInfo()
 
@@ -211,24 +220,31 @@ export async function market() {
 
   let boughtNumber = 0
 
-  await goToSearch(x, y)
-  boughtNumber += await 買防具(x, y, boughtNumber)
+  boughtNumber = await 買防具({ x, y, boughtNumber, message: '開始買 108 防具' })
+  if (!checkMax(boughtNumber, bagSize)) return
+  console.log('')
 
-  if (boughtNumber >= bagSize) {
-    console.log('達到上限了!')
-    console.log(`這次買了 ${boughtNumber} 個`)
-    return
-  }
+  boughtNumber = await 買武器({ x, y, boughtNumber, message: '開始買 108 武器' })
+  if (!checkMax(boughtNumber, bagSize)) return
+  console.log('')
 
-  await goToSearch(x, y)
-  await 買武器(x, y, boughtNumber)
+  boughtNumber = await 買防具({ x, y, boughtNumber, price: 60000, level: 130, message: '開始買 130 防具' })
+  if (!checkMax(boughtNumber, bagSize)) return
+  console.log('')
+
+  boughtNumber = await 買武器({ x, y, boughtNumber, price: 60000, level: 130, message: '開始買 130 武器' })
+  if (!checkMax(boughtNumber, bagSize)) return
+  console.log('')
+
+  pressEnter()
+  console.log('結束囉!')
 }
 
 async function goToSearch(x, y) {
   pressEnter()
   await delay(50)
 
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     _moveMouseByOffset(x, y, 查詢_offset)
     await delay(50)
     clickMouse()
@@ -427,7 +443,7 @@ function displayMousePosition() {
   }, 1000)
 }
 
-async function extract(itemsCount = 10) {
+async function extract(itemsCount = 100) {
   const { x, y } = getApplicationInfo()
 
   // into the town, turn on map name, scale up the bag size, move bag to aline with the map name.
@@ -462,7 +478,7 @@ async function extract(itemsCount = 10) {
 
     if (index % 5 === 0) {
       // 先移到空白的地方, 避免那些道具詳情影響畫面
-      _moveMouseByOffset(x, y, { x: 0, y: 0 }, { randomX: 5, randomY: 2 })
+      _moveMouseByOffset(x, y, { x: confirmOffset.x + 50, y: confirmOffset.y + 50 }, { randomX: 5, randomY: 2 })
       await delay()
 
       _moveMouseByOffset(x, y, confirmOffset, { randomX: 5, randomY: 2 })
