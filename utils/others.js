@@ -5,6 +5,82 @@ import { pressEnter } from './keyboard-action.js'
 import { clickMouse, moveMouseWithBezier, getCurrentCoordinate, clickRightMouse } from './mouse-control.js'
 import rb from 'robotjs'
 
+function _deleteAll(count = 5) {
+  for (let i = 0; i < count; i++) {
+    rb.keyTap('backspace')
+  }
+
+  for (let i = 0; i < count; i++) {
+    rb.keyTap('delete')
+  }
+}
+
+function _keyIn(str) {
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i]
+    rb.keyTap(char)
+  }
+}
+
+export async function market() {
+  const { x, y } = getApplicationInfo()
+
+  const 查詢_offset = { x: 115, y: 126 }
+  const 防具_offset = { x: 135, y: 168 }
+  const 武器_offset = { x: 147, y: 670 }
+  const 完成_offset = { x: 931, y: 128 }
+  const 領取_offset = { x: 969, y: 167 }
+  const 防具重置_offset = { x: 135, y: 629 }
+  const 防具等級_offset = { x: 106, y: 369 }
+  const 防具價格_offset = { x: 211, y: 392 }
+  const 防具搜尋_offset = { x: 214, y: 637 }
+  const 武器重置_offset = { x: 136, y: 631 }
+  const 武器等級_offset = { x: 118, y: 368 }
+  const 武器價格_offset = { x: 216, y: 396 }
+  const 武器搜尋_offset = { x: 220, y: 637 }
+  const 搜尋結果左上_offset = { x: 278, y: 160 }
+  const 搜尋結果右下_offset = { x: 343, y: 174 }
+  const 頁碼左上_offset = { x: 619, y: 156 }
+  const 頁碼右下_offset = { x: 668, y: 176 }
+  const 購買成功左上_offset = { x: 465, y: 414 }
+  const 購買成功右下_offset = { x: 553, y: 434 }
+
+  _moveMouseByOffset(x, y, 查詢_offset)
+  await delay(50)
+  clickMouse()
+  await delay(50)
+
+  _moveMouseByOffset(x, y, 防具_offset)
+  await delay(50)
+  clickMouse()
+  await delay(50)
+
+  _moveMouseByOffset(x, y, 防具重置_offset, { randomX: 2, randomY: 2 })
+  await delay(50)
+  clickMouse()
+  await delay(50)
+
+  _moveMouseByOffset(x, y, 防具價格_offset, { randomX: 2, randomY: 2 })
+  await delay(50)
+  clickMouse()
+  await delay(50)
+  _keyIn('40000')
+  await delay(50)
+
+  _moveMouseByOffset(x, y, 防具等級_offset, { randomX: 2, randomY: 2 })
+  await delay(50)
+  clickMouse()
+  await delay(50)
+  _keyIn('108')
+  await delay(50)
+
+  _moveMouseByOffset(x, y, 防具搜尋_offset, { randomX: 2, randomY: 2 })
+  await delay(50)
+  clickMouse()
+  await delay(50)
+  pressEnter()
+}
+
 const delay = (milSec = 200, randomSec = 100) =>
   new Promise((r) => {
     setTimeout(r, milSec + Math.floor(Math.random() * randomSec))
