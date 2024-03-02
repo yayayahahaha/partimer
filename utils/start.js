@@ -7,7 +7,33 @@ async function start() {
 
   // displayMousePosition()
 
-  marketAndExtract()
+  // marketAndExtract()
+
+  const a = function () {
+    return new Promise((resolve) => {
+      let i = 0
+      setInterval(() => {
+        i++
+        console.log(i)
+        if (i === 10) {
+          resolve(1)
+        }
+      }, 1000)
+    })
+  }
+  const b = function () {
+    return new Promise((resolve) => {
+      let i = 0
+      setInterval(() => {
+        i++
+        console.log(i)
+        if (i === 5) {
+          resolve(2)
+        }
+      }, 1000)
+    })
+  }
+  Promise.race([a(), b()]).then((r) => console.log(r))
 
   // market()
   // extract()

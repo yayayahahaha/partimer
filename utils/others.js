@@ -388,15 +388,25 @@ function getApplicationInfo(showConsole = true) {
 async function waitUntil({ x, y, message, maxWait = 5000, interval = 100, place = 'center', test = false } = {}) {
   let stopTry = false
 
+  let delayResolve = null
+
   return Promise.race([
-    delay(maxWait).then(() => {
-      stopTry = true
-      return null
+    new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        stopTry = true
+        return null
+      }, maxWait)
+
+      delayResolve = function () {
+        clearTimeout(timer)
+        resolve(null)
+      }
     }),
     new Promise((resolve) => {
       return checkMessage()
 
       async function checkMessage() {
+        // 這個可以改寫..
         const screenMessage =
           place === 'center'
             ? await getCenterMessage(x, y)
@@ -414,9 +424,17 @@ async function waitUntil({ x, y, message, maxWait = 5000, interval = 100, place 
 
         if (Array.isArray(message)) {
           if (message.some((str) => screenMessage.match(new RegExp(str)))) {
-            return resolve(true)
+            resolve(true)
+
+            // 避免 nodejs 卡住
+            return void setTimeout(delayResolve, 100)
           }
-        } else if (screenMessage.match(new RegExp(message))) return resolve(true)
+        } else if (screenMessage.match(new RegExp(message))) {
+          resolve(true)
+
+          // 避免 nodejs 卡住
+          return void setTimeout(delayResolve, 100)
+        }
 
         if (stopTry) return resolve(null)
 
