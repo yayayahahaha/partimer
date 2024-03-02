@@ -21,11 +21,13 @@ const keyMap = {
   VK_HOME: 'home',
   VK_UP: 'up',
   VK_V: 'v',
+  VK_4: '4',
   VK_E: 'e',
   VK_T: 't',
   VK_W: 'w',
   VK_Y: 'y',
   VK_R: 'r',
+  VK_H: 'h',
   VK_DELETE: 'delete',
   VK_NEXT: 'pagedown',
 }

@@ -190,12 +190,12 @@ async function ocean() {
   const knife = {
     key: 't',
     current: 0,
-    wait: 11 * 1000,
+    wait: 10 * 1000,
   }
   const wind = {
     key: 'f',
     current: 0,
-    wait: 13 * 1000,
+    wait: 12 * 1000,
   }
 
   let count = 0
