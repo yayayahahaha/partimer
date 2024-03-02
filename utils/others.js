@@ -45,6 +45,17 @@ const 市場搜尋_offset = { x: 198, y: 85 }
 const 市場搜尋左上_offset = { x: 100, y: 81 }
 const 市場搜尋右下_offset = { x: 250, y: 96 }
 
+const 防具_offset = { x: 135, y: 168 }
+const 防具重置_offset = { x: 135, y: 629 }
+const 防具等級_offset = { x: 106, y: 369 }
+const 防具價格_offset = { x: 211, y: 392 }
+const 防具搜尋_offset = { x: 214, y: 637 }
+const 武器_offset = { x: 147, y: 670 }
+const 武器重置_offset = { x: 136, y: 631 }
+const 武器等級_offset = { x: 118, y: 368 }
+const 武器價格_offset = { x: 216, y: 396 }
+const 武器搜尋_offset = { x: 220, y: 637 }
+
 // 得要是英文輸入才可以
 async function englishMarket(x, y) {
   _moveMouseByOffset(x, y, 市場搜尋_offset)
@@ -87,11 +98,6 @@ export async function marketAndExtract() {
   const inMarket = await waitUntil({ x, y, message: '楓之谷拍賣', place: 'market-title' })
   if (inMarket == null) {
     console.log('到不了市場。。。')
-    return
-  }
-
-  if (!(await englishMarket(x, y))) {
-    console.log('記得切換到英文喔')
     return
   }
 
@@ -141,6 +147,10 @@ function getMarketSearch(x, y) {
   return getTextByOffset(x, y, 市場搜尋左上_offset, 市場搜尋右下_offset)
 }
 
+function getMarketResult(x, y) {
+  return getTextByOffset(x, y, 搜尋結果左上_offset, 搜尋結果右下_offset, 'chi_tra')
+}
+
 async function isHasResult(x, y) {
   const resultText = await getTextByOffset(x, y, 搜尋結果左上_offset, 搜尋結果右下_offset, 'chi_tra')
   const centerText = await getCenterMessage(x, y)
@@ -163,22 +173,8 @@ async function checkPage(x, y) {
   return true
 }
 
-async function buyByOffset(config) {
-  const {
-    x,
-    y,
-    標題_offset,
-    重置_offset,
-    等級_offset,
-    價格_offset,
-    搜尋_offset,
-
-    price = 40000,
-    level = 108,
-    boughtNumber: preBoughtNumber = 0,
-  } = config
-
-  await goToSearch(x, y)
+async function setPriceAndLevel(x, y, config) {
+  const { 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset, price, level } = config
 
   _moveMouseByOffset(x, y, 標題_offset)
   await delay(50)
@@ -209,14 +205,30 @@ async function buyByOffset(config) {
   clickMouse()
   await delay(50)
   pressEnter()
+}
+
+async function buyByOffset(config) {
+  const {
+    x,
+    y,
+
+    標題_offset,
+    重置_offset,
+    等級_offset,
+    價格_offset,
+    搜尋_offset,
+    price = 40000,
+    level = 108,
+
+    boughtNumber: preBoughtNumber = 0,
+  } = config
+
+  await goToSearch(x, y)
+
+  await setPriceAndLevel(x, y, { 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset, price, level })
 
   // 等待查詢結果
-  await delay(1000) // TODO 改成圖像查詢?
-
-  if (!(await isHasResult(x, y))) {
-    console.log('沒有結果!')
-    return preBoughtNumber
-  }
+  await waitUntil({ x, y, message: '搜尋結果', maxWait: 10 * 1000, place: 'result', test: true })
 
   if (!(await checkPage(x, y))) {
     console.log('沒有頁碼!')
@@ -258,12 +270,6 @@ async function buyByOffset(config) {
 async function 買防具({ x, y, boughtNumber, price, level, message = '開始買防具' } = {}) {
   console.log(message)
 
-  const 防具_offset = { x: 135, y: 168 }
-  const 防具重置_offset = { x: 135, y: 629 }
-  const 防具等級_offset = { x: 106, y: 369 }
-  const 防具價格_offset = { x: 211, y: 392 }
-  const 防具搜尋_offset = { x: 214, y: 637 }
-
   return buyByOffset({
     x,
     y,
@@ -279,12 +285,6 @@ async function 買防具({ x, y, boughtNumber, price, level, message = '開始�
 }
 async function 買武器({ x, y, boughtNumber, price, level, message = '開始買武器' } = {}) {
   console.log(message)
-
-  const 武器_offset = { x: 147, y: 670 }
-  const 武器重置_offset = { x: 136, y: 631 }
-  const 武器等級_offset = { x: 118, y: 368 }
-  const 武器價格_offset = { x: 216, y: 396 }
-  const 武器搜尋_offset = { x: 220, y: 637 }
 
   return buyByOffset({
     x,
@@ -310,10 +310,31 @@ function checkMax(boughtNumber, bagSize) {
   return true
 }
 
+async function clearMarket(x, y) {
+  const 標題_offset = 防具_offset
+  const 重置_offset = 防具重置_offset
+  const 等級_offset = 防具等級_offset
+  const 價格_offset = 防具價格_offset
+  const 搜尋_offset = 防具搜尋_offset
+  const price = 1
+  const level = 300
+
+  await setPriceAndLevel(x, y, { 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset, price, level })
+  await delay(5000)
+}
+
 export async function market() {
   const { x, y } = getApplicationInfo()
 
+  if (!(await englishMarket(x, y))) {
+    console.log('記得切換到英文喔')
+    return
+  }
+
   console.log('包包容量: ', bagSize)
+
+  // 清空畫面，不然會買到其他東西。。。
+  await clearMarket(x, y)
 
   let boughtNumber = 0
 
@@ -334,7 +355,7 @@ export async function market() {
   console.log('')
 
   pressEnter()
-  console.log('結束囉!')
+  console.log('市場結束囉!')
 }
 
 async function goToSearch(x, y) {
@@ -418,7 +439,9 @@ async function waitUntil({ x, y, message, maxWait = 5000, interval = 100, place 
                   ? await getMarketTitle(x, y)
                   : place === 'market-search'
                     ? await getMarketSearch(x, y)
-                    : () => null
+                    : place === 'result'
+                      ? await getMarketResult(x, y)
+                      : () => null
 
         test && console.log('waitUntil:', JSON.stringify(screenMessage), JSON.stringify(message))
 
