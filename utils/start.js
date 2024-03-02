@@ -8,9 +8,9 @@ async function start() {
   // displayMousePosition()
 
   // market()
+  extract(70)
 
   // buy(4, 9)
-  extract(65)
   // go(3, './behavior/tears-2.json')
   // go(5, './behavior/ture-power.json')
 

@@ -5,7 +5,6 @@ import { pressEnter } from './keyboard-action.js'
 import { clickMouse, moveMouseWithBezier, getCurrentCoordinate, clickRightMouse } from './mouse-control.js'
 import rb from 'robotjs'
 import { captureScreenAndConvertToJimp, recognizeText } from './text.js'
-import { start } from './start.js'
 
 function delay(milSec = 200, randomSec = 100) {
   return new Promise((r) => {
@@ -19,7 +18,7 @@ function _keyIn(str) {
   }
 }
 
-const bagSize = 7 // TEST codes
+const bagSize = 80 // TEST codes
 const searchOffset = { x: 120, y: 120 }
 const firstItemOffset = { x: 950, y: 230 }
 const buyButtonOffset = { x: 950, y: 750 }
@@ -160,10 +159,7 @@ async function buyByOffset(config) {
     boughtNumber += 1
     console.log(`目前買了 ${boughtNumber} 個`)
 
-    // TEST codes
-    // if (currentBuy === 10) return currentBuy
-    if (currentBuy === 3) return currentBuy
-
+    if (currentBuy === 10) return currentBuy
     return _buyRecursive(currentBuy)
   }
 }
@@ -276,7 +272,7 @@ function getApplicationInfo(showConsole = true) {
   return { applicationTitle, x, y, endX, endY, width, height }
 }
 
-async function waitUntil({ x, y, message, maxWait = 5000, interval = 500, place = 'center' } = {}) {
+async function waitUntil({ x, y, message, maxWait = 5000, interval = 100, place = 'center' } = {}) {
   let stopTry = false
 
   return Promise.race([
@@ -290,7 +286,7 @@ async function waitUntil({ x, y, message, maxWait = 5000, interval = 500, place 
         const centerMessage = place === 'center' ? await getCenterMessage(x, y) : await getExtractMessage(x, y)
 
         // testing codes
-        console.log('waitUntil:', JSON.stringify(centerMessage), JSON.stringify(message))
+        // console.log('waitUntil:', JSON.stringify(centerMessage), JSON.stringify(message))
 
         if (Array.isArray(message)) {
           if (message.some((str) => centerMessage.match(new RegExp(str)))) {
@@ -425,6 +421,7 @@ function displayMousePosition() {
     const [ax, ay] = getCurrentCoordinate()
     console.log('absolute position: ', ax, ay)
     console.log('application position: ', x, y)
+    // console.log('color: ', rb.getPixelColor(713 + x, 493 + y))
     console.log('offset position: ', ax - x, ay - y)
     console.log()
   }, 1000)
@@ -450,6 +447,8 @@ async function extract(itemsCount = 10) {
   clickMouse()
   await delay()
 
+  const colorPoint = { ax: x + 713, ay: y + 493, color: 'ccee00' }
+
   for (let index = 1; index <= itemsCount; index++) {
     _moveMouseByOffset(x, y, offset, { randomX: 3, randomY: 3 })
     await delay(50)
@@ -462,8 +461,20 @@ async function extract(itemsCount = 10) {
     offset = _getOffsetByCoordinate(row, column)
 
     if (index % 5 === 0) {
+      // 先移到空白的地方, 避免那些道具詳情影響畫面
+      _moveMouseByOffset(x, y, { x: 0, y: 0 }, { randomX: 5, randomY: 2 })
+      await delay()
+
       _moveMouseByOffset(x, y, confirmOffset, { randomX: 5, randomY: 2 })
       await delay()
+
+      // 檢查顏色
+      const currentColor = rb.getPixelColor(colorPoint.ax, colorPoint.ay)
+      if (currentColor !== colorPoint.color) {
+        console.log('已經沒了!')
+        break
+      }
+
       clickMouse()
       await delay()
       pressEnter()
