@@ -16,6 +16,9 @@
   },
   "dependencies": {
     "ffi-napi": "^4.0.3",
+    "jimp": "^0.22.10",
+    "node-global-key-listener": "^0.1.1",
+    "robotjs": "^0.6.0",
     "tesseract.js": "^5.0.4"
   }
 }

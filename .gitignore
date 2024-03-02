@@ -129,5 +129,10 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
- # Mac cache  
+# Mac cache  
 .DS_Store
+
+
+# behavior folder
+behavior/*
+!behavior/.gitkeep
