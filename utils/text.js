@@ -5,8 +5,11 @@ import { beforeStart, getApplicationInfo } from './others.js'
 
 // TODO 這個可以和 screen 那邊的做整合
 // 擷取螢幕截圖並轉換為 Jimp 圖像
-async function captureScreenAndConvertToJimp() {
-  const { x, y, width, height } = getApplicationInfo()
+export async function captureScreenAndConvertToJimp(config = {}) {
+  const noDefault = config.noDefault == null ? false : true
+  const defaultSetting = noDefault ? {} : getApplicationInfo()
+  const { x, y, width, height } = Object.assign({}, defaultSetting, config)
+
   const screenshot = robot.screen.capture(x, y, width, height)
 
   // 這個東西居然只在 windows 有效我的天, 不過目前這樣出來的會有顏色的問題
@@ -36,9 +39,9 @@ async function captureScreenAndConvertToJimp() {
 }
 
 // 使用 Tesseract.js 辨識圖像中的文字
-async function recognizeText(imageBuffer) {
+export async function recognizeText(imageBuffer, language = 'eng') {
   // 設置引擎參數
-  const config = {
+  const defaultConfig = {
     lang: 'eng+chi_tra', // 要辨識的語言
     oem: 1, // OCR 引擎模式 (1 表示 Tesseract)
     psm: 0, // Page Segmentation Mode (3 表示單一行)
@@ -47,18 +50,15 @@ async function recognizeText(imageBuffer) {
     // 更多參數可以參考 Tesseract.js 的文檔
   }
 
-  const worker = await createWorker('eng+chi_tra')
+  const worker = await createWorker(language)
+  // const worker = await createWorker('eng+chi_tra')
   // const worker = await createWorker(config)
 
-  ;(async () => {
-    const {
-      data: { text },
-    } = await worker.recognize(imageBuffer)
-    console.log()
-    console.log()
-    console.log(text)
-    await worker.terminate()
-  })()
+  const {
+    data: { text },
+  } = await worker.recognize(imageBuffer)
+  await worker.terminate()
+  return text
 }
 
 // 主函式
@@ -81,4 +81,4 @@ async function main() {
   }
 }
 
-main()
+// main()

@@ -4,17 +4,14 @@ import { getForegroundWindowRect, getForegroundWindowTitle } from './application
 import { pressEnter } from './keyboard-action.js'
 import { clickMouse, moveMouseWithBezier, getCurrentCoordinate, clickRightMouse } from './mouse-control.js'
 import rb from 'robotjs'
+import { captureScreenAndConvertToJimp, recognizeText } from './text.js'
+import { start } from './start.js'
 
-function _deleteAll(count = 5) {
-  for (let i = 0; i < count; i++) {
-    rb.keyTap('backspace')
-  }
-
-  for (let i = 0; i < count; i++) {
-    rb.keyTap('delete')
-  }
+function delay(milSec = 200, randomSec = 100) {
+  return new Promise((r) => {
+    setTimeout(r, milSec + Math.floor(Math.random() * randomSec))
+  })
 }
-
 function _keyIn(str) {
   for (let i = 0; i < str.length; i++) {
     const char = str[i]
@@ -22,69 +19,183 @@ function _keyIn(str) {
   }
 }
 
-export async function market() {
-  const { x, y } = getApplicationInfo()
+const searchOffset = { x: 120, y: 120 }
+const firstItemOffset = { x: 950, y: 230 }
+const buyButtonOffset = { x: 950, y: 750 }
+const completeOffset = { x: 920, y: 120 }
+const recievedButtonOffset = { x: 970, y: 170 }
+const 搜尋結果左上_offset = { x: 285, y: 155 }
+const 搜尋結果右下_offset = { x: 355, y: 180 }
+const 頁碼左上_offset = { x: 619, y: 156 }
+const 頁碼右下_offset = { x: 668, y: 176 }
+const 中央訊息左上_offset = { x: 435, y: 414 }
+const 中央訊息右下_offset = { x: 583, y: 437 }
+const 查詢_offset = { x: 115, y: 126 }
+const 完成_offset = { x: 931, y: 128 }
+const 領取_offset = { x: 969, y: 167 }
 
-  const 查詢_offset = { x: 115, y: 126 }
-  const 防具_offset = { x: 135, y: 168 }
-  const 武器_offset = { x: 147, y: 670 }
-  const 完成_offset = { x: 931, y: 128 }
-  const 領取_offset = { x: 969, y: 167 }
-  const 防具重置_offset = { x: 135, y: 629 }
-  const 防具等級_offset = { x: 106, y: 369 }
-  const 防具價格_offset = { x: 211, y: 392 }
-  const 防具搜尋_offset = { x: 214, y: 637 }
-  const 武器重置_offset = { x: 136, y: 631 }
-  const 武器等級_offset = { x: 118, y: 368 }
-  const 武器價格_offset = { x: 216, y: 396 }
-  const 武器搜尋_offset = { x: 220, y: 637 }
-  const 搜尋結果左上_offset = { x: 278, y: 160 }
-  const 搜尋結果右下_offset = { x: 343, y: 174 }
-  const 頁碼左上_offset = { x: 619, y: 156 }
-  const 頁碼右下_offset = { x: 668, y: 176 }
-  const 購買成功左上_offset = { x: 465, y: 414 }
-  const 購買成功右下_offset = { x: 553, y: 434 }
+function getCenterMessage(x, y) {
+  return getTextByOffset(x, y, 中央訊息左上_offset, 中央訊息右下_offset, 'chi_tra')
+}
 
-  _moveMouseByOffset(x, y, 查詢_offset)
+async function isHasResult(x, y) {
+  const resultText = await getTextByOffset(x, y, 搜尋結果左上_offset, 搜尋結果右下_offset, 'chi_tra')
+  const centerText = await getCenterMessage(x, y)
+
+  if (centerText === '查無此道具。') {
+    console.log('查無此道具。!')
+    return false
+  }
+
+  if (resultText !== '搜尋結果') {
+    console.log('沒有搜尋結果!')
+    return false
+  }
+
+  if (!(await checkPage(x, y))) return false
+
+  return true
+}
+
+async function checkPage(x, y) {
+  const pageText = await getTextByOffset(x, y, 頁碼左上_offset, 頁碼右下_offset)
+  if (!/\d+\/\d+/.test(pageText)) {
+    console.log('沒有頁碼!')
+    return null
+  }
+  if (pageText === '0/0') {
+    console.log('沒了!')
+    return null
+  }
+
+  return true
+}
+
+async function buyByOffset(config, { price = 40000, level = 108 } = {}) {
+  const { x, y, 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset } = config
+
+  _moveMouseByOffset(x, y, 標題_offset)
   await delay(50)
   clickMouse()
   await delay(50)
 
-  _moveMouseByOffset(x, y, 防具_offset)
+  _moveMouseByOffset(x, y, 重置_offset, { randomX: 2, randomY: 2 })
   await delay(50)
   clickMouse()
   await delay(50)
 
-  _moveMouseByOffset(x, y, 防具重置_offset, { randomX: 2, randomY: 2 })
+  _moveMouseByOffset(x, y, 價格_offset, { randomX: 2, randomY: 2 })
   await delay(50)
   clickMouse()
   await delay(50)
+  _keyIn(String(price))
+  await delay(50)
 
-  _moveMouseByOffset(x, y, 防具價格_offset, { randomX: 2, randomY: 2 })
+  _moveMouseByOffset(x, y, 等級_offset, { randomX: 2, randomY: 2 })
   await delay(50)
   clickMouse()
   await delay(50)
-  _keyIn('40000')
+  _keyIn(String(level))
   await delay(50)
 
-  _moveMouseByOffset(x, y, 防具等級_offset, { randomX: 2, randomY: 2 })
-  await delay(50)
-  clickMouse()
-  await delay(50)
-  _keyIn('108')
-  await delay(50)
-
-  _moveMouseByOffset(x, y, 防具搜尋_offset, { randomX: 2, randomY: 2 })
+  _moveMouseByOffset(x, y, 搜尋_offset, { randomX: 2, randomY: 2 })
   await delay(50)
   clickMouse()
   await delay(50)
   pressEnter()
+  await delay(1000) // TODO 改成圖像查詢?
+
+  if (!(await isHasResult(x, y))) return false
+
+  if (!(await checkPage(x, y))) return
+  console.log('開買!')
+  let boughtNumber = 0
+
+  boughtNumber += await _buyRecursive()
+
+  await recieveItems(x, y)
+
+  async function _buyRecursive(currentBuy = 0) {
+    await buySingle(x, y)
+    const current = currentBuy + 1
+
+    if (!(await checkPage(x, y))) return currentBuy
+
+    if (current === 10) return currentBuy
+    return _buyRecursive(current)
+  }
+}
+async function 買防具(x, y) {
+  const 防具_offset = { x: 135, y: 168 }
+  const 防具重置_offset = { x: 135, y: 629 }
+  const 防具等級_offset = { x: 106, y: 369 }
+  const 防具價格_offset = { x: 211, y: 392 }
+  const 防具搜尋_offset = { x: 214, y: 637 }
+
+  return buyByOffset({
+    x,
+    y,
+    標題_offset: 防具_offset,
+    重置_offset: 防具重置_offset,
+    等級_offset: 防具等級_offset,
+    價格_offset: 防具價格_offset,
+    搜尋_offset: 防具搜尋_offset,
+  })
+}
+async function 買武器(x, y) {
+  const 武器_offset = { x: 147, y: 670 }
+  const 武器重置_offset = { x: 136, y: 631 }
+  const 武器等級_offset = { x: 118, y: 368 }
+  const 武器價格_offset = { x: 216, y: 396 }
+  const 武器搜尋_offset = { x: 220, y: 637 }
+
+  return buyByOffset({
+    x,
+    y,
+    標題_offset: 武器_offset,
+    重置_offset: 武器重置_offset,
+    等級_offset: 武器等級_offset,
+    價格_offset: 武器價格_offset,
+    搜尋_offset: 武器搜尋_offset,
+  })
 }
 
-const delay = (milSec = 200, randomSec = 100) =>
-  new Promise((r) => {
-    setTimeout(r, milSec + Math.floor(Math.random() * randomSec))
-  })
+export async function market() {
+  const { x, y } = getApplicationInfo()
+
+  await goToSearch(x, y)
+
+  await 買防具(x, y)
+
+  await goToSearch(x, y)
+
+  await 買武器(x, y)
+}
+
+async function goToSearch(x, y) {
+  pressEnter()
+  await delay(50)
+
+  for (let i = 0; i < 3; i++) {
+    _moveMouseByOffset(x, y, 查詢_offset)
+    await delay(50)
+    clickMouse()
+    await delay(50)
+  }
+}
+
+async function getTextByOffset(x, y, startOffset, endOffset, language = 'eng') {
+  const setting = {
+    x: x + startOffset.x,
+    y: y + startOffset.y,
+    width: endOffset.x - startOffset.x,
+    height: endOffset.y - startOffset.y,
+    noDefault: true,
+  }
+  const imgBuffer = await captureScreenAndConvertToJimp(setting)
+  const recognizedText = await recognizeText(imgBuffer, language)
+  return recognizedText.replace(/\s+/g, '')
+}
 
 async function beforeStart(sec = 5) {
   console.log(`Start in ${sec} sec`)
@@ -109,14 +220,78 @@ function getApplicationInfo(showConsole = true) {
   return { applicationTitle, x, y, endX, endY, width, height }
 }
 
+async function waitUntil(x, y, message, maxWait = 5000, interval = 500) {
+  return Promise.race([
+    delay(maxWait),
+    new Promise((resolve) => {
+      return checkMessage()
+
+      async function checkMessage() {
+        const centerMessage = await getCenterMessage(x, y)
+
+        console.log('waitUntil:', JSON.stringify(centerMessage), JSON.stringify(message))
+
+        if (centerMessage.match(new RegExp(message))) return resolve(true)
+
+        return setTimeout(checkMessage, interval)
+      }
+    }),
+  ])
+}
+
+async function recieveItems(x, y) {
+  pressEnter()
+  await delay()
+
+  // move to complete button
+  _moveMouseByOffset(x, y, completeOffset)
+  await delay()
+  clickMouse()
+  await delay()
+
+  // move to accept all recieved items
+  _moveMouseByOffset(x, y, recievedButtonOffset)
+  await delay()
+  clickMouse()
+  await delay()
+  pressEnter()
+
+  await waitUntil(x, y, '已完成', 10000)
+
+  pressEnter()
+  await delay()
+}
+
+async function buySingle(x, y) {
+  _moveMouseByOffset(x, y, firstItemOffset)
+  await delay()
+  clickMouse()
+  await delay()
+
+  // click buy button
+  _moveMouseByOffset(x, y, buyButtonOffset)
+  await delay()
+  clickMouse()
+  await delay()
+
+  pressEnter()
+  const buyResult = await waitUntil(x, y, '成功')
+  if (buyResult == null) {
+    const noSpace = await waitUntil(x, y, '不足')
+    if (noSpace != null) return recieveItems(x, y)
+
+    const notExist = await waitUntil(x, y, '不存在')
+    if (notExist != null) {
+      console.log('被搶先了')
+    }
+  }
+
+  pressEnter()
+  await delay()
+}
+
 async function buy(buyTimes = 1, eachRoundItems = 10) {
   const { x, y } = getApplicationInfo()
-
-  const searchOffset = { x: 120, y: 120 }
-  const firstItemOffset = { x: 950, y: 230 }
-  const buyButtonOffset = { x: 950, y: 750 }
-  const completeOffset = { x: 920, y: 120 }
-  const recievedButtonOffset = { x: 970, y: 170 }
 
   for (let i = 0; i < buyTimes; i++) {
     // click search button
