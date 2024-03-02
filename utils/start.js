@@ -1,11 +1,13 @@
 // 因為要在不同的系統開發的關係，這樣比較方便
-import { beforeStart, buy, displayMousePosition, extract, market, ocean } from './others.js'
+import { beforeStart, buy, displayMousePosition, extract, market, ocean, marketAndExtract } from './others.js'
 import { anotherGo, go } from './replay.js'
 
 async function start() {
   await beforeStart(3)
 
   // displayMousePosition()
+
+  marketAndExtract()
 
   // market()
   // extract()

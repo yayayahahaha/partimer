@@ -31,10 +31,95 @@ const 頁碼右下_offset = { x: 668, y: 176 }
 const 中央訊息左上_offset = { x: 435, y: 414 }
 const 中央訊息右下_offset = { x: 583, y: 437 }
 const 查詢_offset = { x: 115, y: 126 }
-const 完成_offset = { x: 931, y: 128 }
-const 領取_offset = { x: 969, y: 167 }
 const 分解訊息左上_offset = { x: 650, y: 473 }
 const 分解訊息右下_offset = { x: 730, y: 500 }
+const 離開_offset = { x: 977, y: 56 }
+const 鎮名左上_Offset = { x: 135, y: 60 }
+const 鎮名右下_Offset = { x: 188, y: 80 }
+const 裝備_offset = { x: 30, y: 124 }
+
+const 市場標題左上_Offset = { x: 11, y: 43 }
+const 市場標題右下_Offset = { x: 140, y: 75 }
+
+const 市場搜尋_offset = { x: 198, y: 85 }
+const 市場搜尋左上_offset = { x: 100, y: 81 }
+const 市場搜尋右下_offset = { x: 250, y: 96 }
+
+// 得要是英文輸入才可以
+async function englishMarket(x, y) {
+  _moveMouseByOffset(x, y, 市場搜尋_offset)
+  await delay()
+  clickMouse()
+  await delay()
+  _keyIn('123')
+
+  let is123 = await waitUntil({ x, y, message: '123', place: 'market-search' })
+  if (is123 == null) {
+    _keyIn(Array(5).fill('backspace'))
+    await delay()
+
+    rb.keyTap('shift')
+    await delay()
+
+    _keyIn('123')
+    is123 = await waitUntil({ x, y, message: '123', place: 'market-search' })
+
+    if (is123 == null) return false
+
+    return true
+  }
+
+  return true
+}
+
+export async function marketAndExtract() {
+  const { x, y } = getApplicationInfo()
+
+  let townName = await waitUntil({ x, y, maxWait: 6 * 1000, message: '梅斯特', place: 'town' })
+  if (townName == null) {
+    console.log('要先到鎮上喔')
+    return
+  }
+
+  _keyIn([']', ...Array(4).fill('down')])
+  pressEnter()
+
+  const inMarket = await waitUntil({ x, y, message: '楓之谷拍賣', place: 'market-title' })
+  if (inMarket == null) {
+    console.log('到不了市場。。。')
+    return
+  }
+
+  if (!(await englishMarket(x, y))) {
+    console.log('記得切換到英文喔')
+    return
+  }
+
+  await market()
+
+  _moveMouseByOffset(x, y, 離開_offset)
+  await delay()
+  clickMouse()
+  await delay()
+
+  townName = await waitUntil({ x, y, maxWait: 60 * 1000, message: '梅斯特', place: 'town' })
+  if (townName == null) {
+    console.log('回不去鎮上。。。')
+    return
+  }
+
+  rb.keyTap('i')
+  await delay()
+
+  _moveMouseByOffset(x, y, 裝備_offset, { randomX: 2, randomY: 2 })
+  await delay()
+  clickMouse()
+  await delay()
+
+  await extract()
+
+  console.log('結束囉!')
+}
 
 function getCenterMessage(x, y) {
   return getTextByOffset(x, y, 中央訊息左上_offset, 中央訊息右下_offset, 'chi_tra')
@@ -42,6 +127,18 @@ function getCenterMessage(x, y) {
 
 function getExtractMessage(x, y) {
   return getTextByOffset(x, y, 分解訊息左上_offset, 分解訊息右下_offset, 'chi_tra')
+}
+
+function getTownName(x, y) {
+  return getTextByOffset(x, y, 鎮名左上_Offset, 鎮名右下_Offset, 'chi_tra')
+}
+
+function getMarketTitle(x, y) {
+  return getTextByOffset(x, y, 市場標題左上_Offset, 市場標題右下_Offset, 'chi_tra')
+}
+
+function getMarketSearch(x, y) {
+  return getTextByOffset(x, y, 市場搜尋左上_offset, 市場搜尋右下_offset)
 }
 
 async function isHasResult(x, y) {
@@ -288,27 +385,38 @@ function getApplicationInfo(showConsole = true) {
   return { applicationTitle, x, y, endX, endY, width, height }
 }
 
-async function waitUntil({ x, y, message, maxWait = 5000, interval = 100, place = 'center' } = {}) {
+async function waitUntil({ x, y, message, maxWait = 5000, interval = 100, place = 'center', test = false } = {}) {
   let stopTry = false
 
   return Promise.race([
     delay(maxWait).then(() => {
       stopTry = true
+      return null
     }),
     new Promise((resolve) => {
       return checkMessage()
 
       async function checkMessage() {
-        const centerMessage = place === 'center' ? await getCenterMessage(x, y) : await getExtractMessage(x, y)
+        const screenMessage =
+          place === 'center'
+            ? await getCenterMessage(x, y)
+            : place === 'extract'
+              ? await getExtractMessage(x, y)
+              : place === 'town'
+                ? await getTownName(x, y)
+                : place === 'market-title'
+                  ? await getMarketTitle(x, y)
+                  : place === 'market-search'
+                    ? await getMarketSearch(x, y)
+                    : () => null
 
-        // testing codes
-        // console.log('waitUntil:', JSON.stringify(centerMessage), JSON.stringify(message))
+        test && console.log('waitUntil:', JSON.stringify(screenMessage), JSON.stringify(message))
 
         if (Array.isArray(message)) {
-          if (message.some((str) => centerMessage.match(new RegExp(str)))) {
+          if (message.some((str) => screenMessage.match(new RegExp(str)))) {
             return resolve(true)
           }
-        } else if (centerMessage.match(new RegExp(message))) return resolve(true)
+        } else if (screenMessage.match(new RegExp(message))) return resolve(true)
 
         if (stopTry) return resolve(null)
 
