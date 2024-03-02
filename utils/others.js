@@ -86,7 +86,7 @@ async function englishMarket(x, y) {
 export async function marketAndExtract() {
   const { x, y } = getApplicationInfo()
 
-  let townName = await waitUntil({ x, y, maxWait: 6 * 1000, message: '梅斯特', place: 'town' })
+  const townName = await waitUntil({ x, y, maxWait: 6 * 1000, message: '梅斯特', place: 'town' })
   if (townName == null) {
     console.log('要先到鎮上喔')
     return
@@ -104,20 +104,6 @@ export async function marketAndExtract() {
   await market()
 
   _moveMouseByOffset(x, y, 離開_offset)
-  await delay()
-  clickMouse()
-  await delay()
-
-  townName = await waitUntil({ x, y, maxWait: 60 * 1000, message: '梅斯特', place: 'town' })
-  if (townName == null) {
-    console.log('回不去鎮上。。。')
-    return
-  }
-
-  rb.keyTap('i')
-  await delay()
-
-  _moveMouseByOffset(x, y, 裝備_offset, { randomX: 2, randomY: 2 })
   await delay()
   clickMouse()
   await delay()
@@ -592,8 +578,22 @@ function displayMousePosition() {
   }, 1000)
 }
 
-async function extract(itemsCount = 100) {
+async function extract(itemsCount = 70) {
   const { x, y } = getApplicationInfo()
+
+  const townName = await waitUntil({ x, y, maxWait: 60 * 1000, message: '梅斯特', place: 'town' })
+  if (townName == null) {
+    console.log('回不去鎮上。。。')
+    return
+  }
+
+  rb.keyTap('i')
+  await delay()
+
+  _moveMouseByOffset(x, y, 裝備_offset, { randomX: 2, randomY: 2 })
+  await delay()
+  clickMouse()
+  await delay()
 
   // into the town, turn on map name, scale up the bag size, move bag to aline with the map name.
   // please according the first items you want to extract define the veryFirstStart.
