@@ -152,8 +152,9 @@ async function isHasResult(x, y) {
 
 async function checkPage(x, y) {
   const pageText = await getTextByOffset(x, y, 頁碼左上_offset, 頁碼右下_offset)
+  console.log('pageText:', pageText)
 
-  if (!/\d+\/\d+/.test(pageText)) return null
+  if (!/\d+\/?\d+/.test(pageText)) return null
   if (pageText === '0/0') return null
 
   return true
@@ -326,6 +327,8 @@ export async function market() {
   }
 
   console.log('包包容量: ', bagSize)
+
+  await goToSearch(x, y)
 
   // 清空畫面，不然會買到其他東西。。。
   await clearMarket(x, y)
