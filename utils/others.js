@@ -152,7 +152,6 @@ async function isHasResult(x, y) {
 
 async function checkPage(x, y) {
   const pageText = await getTextByOffset(x, y, 頁碼左上_offset, 頁碼右下_offset)
-  console.log('pageText:', pageText)
 
   if (!/\d+\/?\d+/.test(pageText)) return null
   if (pageText === '0/0') return null
@@ -219,7 +218,7 @@ async function buyByOffset(config) {
     waitUntil({
       x,
       y,
-      message: ['搜尋結果', '查無此道具。'],
+      message: [['搜尋結果'], ['查無此道具。']],
       maxWait: 10 * 1000,
       place: ['result', 'center'],
     }),
@@ -404,12 +403,14 @@ function getApplicationInfo(showConsole = true) {
 }
 
 // TODO 這個蠻好用的，可以改寫放到其他地方試試看
+// 覺得需要有一個 instance 去處理的感覺，不然會有點亂
 async function waitUntil({ x, y, message, maxWait = 5000, interval = 100, place = 'center', test = false } = {}) {
   let stopTry = false
 
   let delayResolve = null
 
   return Promise.race([
+    // max wait timer
     new Promise((resolve) => {
       const timer = setTimeout(() => {
         stopTry = true
@@ -421,15 +422,17 @@ async function waitUntil({ x, y, message, maxWait = 5000, interval = 100, place 
         resolve(null)
       }
     }),
+
+    // retry function
     new Promise((resolve) => {
-      return checkMessage()
+      checkMessage()
 
       async function checkMessage() {
         if (!Array.isArray(message)) {
           // TODO 改寫法
           message = [[message]]
-        } else if (message.every((m) => Array.isArray(m))) {
-          message = message.map((m) => [m])
+        } else if (!message.every((m) => Array.isArray(m))) {
+          message = [message]
         }
 
         if (!Array.isArray(place)) {
@@ -531,7 +534,7 @@ async function buySingle(x, y) {
   await waitUntil({
     x,
     y,
-    message: ['成功', '不足', '不存在'],
+    message: ['成功', '不足', '不存在'], // TODO 這個要加上 "是哪個符合到了" 的功能，畢竟要做的事情不一樣
     maxWait: 10 * 1000,
   })
 
