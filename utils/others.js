@@ -320,10 +320,7 @@ async function clearMarket(x, y) {
 export async function market() {
   const { x, y } = getApplicationInfo()
 
-  if (!(await englishMarket(x, y))) {
-    console.log('記得切換到英文喔')
-    return
-  }
+  if (!(await englishMarket(x, y))) return void console.log('記得切換到英文喔')
 
   console.log('包包容量: ', bagSize)
 
@@ -334,19 +331,19 @@ export async function market() {
 
   let boughtNumber = 0
 
-  boughtNumber = await 買防具({ x, y, boughtNumber, message: '開始買 108 防具' })
-  if (!checkMax(boughtNumber, bagSize)) return
-  console.log('')
-
-  boughtNumber = await 買武器({ x, y, boughtNumber, message: '開始買 108 武器' })
-  if (!checkMax(boughtNumber, bagSize)) return
-  console.log('')
-
   boughtNumber = await 買防具({ x, y, boughtNumber, price: 60000, level: 130, message: '開始買 130 防具' })
   if (!checkMax(boughtNumber, bagSize)) return
   console.log('')
 
   boughtNumber = await 買武器({ x, y, boughtNumber, price: 60000, level: 130, message: '開始買 130 武器' })
+  if (!checkMax(boughtNumber, bagSize)) return
+  console.log('')
+
+  boughtNumber = await 買防具({ x, y, boughtNumber, message: '開始買 108 防具' })
+  if (!checkMax(boughtNumber, bagSize)) return
+  console.log('')
+
+  boughtNumber = await 買武器({ x, y, boughtNumber, message: '開始買 108 武器' })
   if (!checkMax(boughtNumber, bagSize)) return
   console.log('')
 
@@ -518,6 +515,7 @@ async function recieveItems(x, y) {
   await delay()
 }
 
+// TODO 只能持有一個的場景
 async function buySingle(x, y) {
   _moveMouseByOffset(x, y, firstItemOffset)
   await delay()
@@ -615,14 +613,12 @@ function displayMousePosition() {
   }, 1000)
 }
 
+// 處理一下不能分解的東西
 async function extract(itemsCount = 70) {
   const { x, y } = getApplicationInfo()
 
   const townName = await waitUntil({ x, y, maxWait: 60 * 1000, message: '梅斯特', place: 'town' })
-  if (townName == null) {
-    console.log('回不去鎮上。。。')
-    return
-  }
+  if (townName == null) return void console.log('回不去鎮上。。。')
 
   rb.keyTap('i')
   await delay()
@@ -695,6 +691,9 @@ async function extract(itemsCount = 70) {
       await delay()
     }
   }
+
+  // 關閉分解和裝備視窗
+  _keyIn(Array(2).fill('escape'))
 
   function _toNextRowColumn(row, coloumn) {
     let returnRow = row
