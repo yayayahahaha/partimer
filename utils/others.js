@@ -58,7 +58,7 @@ const 武器搜尋_offset = { x: 220, y: 637 }
 
 // 得要是英文輸入才可以
 async function englishMarket(x, y) {
-  _moveMouseByOffset(x, y, 市場搜尋_offset)
+  _moveMouseByOffset(x, y, 市場搜尋_offset, { randomX: 2, randomY: 1 })
   await delay()
   clickMouse()
   await delay()
@@ -87,23 +87,21 @@ export async function marketAndExtract() {
   const { x, y } = getApplicationInfo()
 
   const townName = await waitUntil({ x, y, maxWait: 6 * 1000, message: '梅斯特', place: 'town' })
-  if (townName == null) {
-    console.log('要先到鎮上喔')
-    return
-  }
+  if (townName == null) return void console.log('要先到鎮上喔')
 
   _keyIn([']', ...Array(4).fill('down')])
   pressEnter()
 
   const inMarket = await waitUntil({ x, y, message: '楓之谷拍賣', place: 'market-title' })
-  if (inMarket == null) {
-    console.log('到不了市場。。。')
-    return
-  }
+  if (inMarket == null) return void console.log('到不了市場。。。')
 
-  await market()
+  const marketResult = await market()
 
   _moveMouseByOffset(x, y, 離開_offset)
+
+  // 為了回到城鎮，所以檢查會放在離開的後面
+  if (marketResult == null) return
+
   await delay()
   clickMouse()
   await delay()
@@ -349,6 +347,8 @@ export async function market() {
 
   pressEnter()
   console.log('市場結束囉!')
+
+  return true
 }
 
 async function goToSearch(x, y) {
