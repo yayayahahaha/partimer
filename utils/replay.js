@@ -1,36 +1,30 @@
-import { GlobalKeyboardListener } from 'node-global-key-listener'
 import fs from 'fs'
 import path from 'path'
 import rb from 'robotjs'
 import { hasColor, PURPLE_COLOR, OTHER_USER_COLOR, USER_COLOR } from './screen.js'
 
-const keyMap = {
-  VK_RIGHT: 'right',
-  VK_LEFT: 'left',
-  VK_LMENU: 'alt',
-  VK_END: 'end',
+const az = new Array(26).fill().map((_, index) => String.fromCharCode('a'.codePointAt() + index))
+const oneNine = new Array(10).fill().map((_, index) => `${index}`)
 
-  VK_2: '2',
-  VK_3: '3',
-  VK_A: 'a',
-  VK_D: 'd',
-  VK_DOWN: 'down',
-  VK_F: 'f',
-  VK_G: 'g',
-  VK_NUMPAD7: 'home',
-  VK_HOME: 'home',
-  VK_UP: 'up',
-  VK_V: 'v',
-  VK_4: '4',
-  VK_E: 'e',
-  VK_T: 't',
-  VK_W: 'w',
-  VK_Y: 'y',
-  VK_R: 'r',
-  VK_H: 'h',
-  VK_DELETE: 'delete',
-  VK_NEXT: 'pagedown',
-}
+const keyMap = Object.assign(
+  {
+    VK_NUMPAD7: 'home',
+    VK_HOME: 'home',
+
+    VK_LMENU: 'alt',
+    VK_END: 'end',
+
+    VK_UP: 'up',
+    VK_DOWN: 'down',
+    VK_RIGHT: 'right',
+    VK_LEFT: 'left',
+
+    VK_DELETE: 'delete',
+    VK_NEXT: 'pagedown',
+  },
+  Object.fromEntries(az.map((char) => [`VK_${char.toUpperCase()}`, char])),
+  Object.fromEntries(oneNine.map((num) => [`VK_${num}`, `${num}`]))
+)
 
 const attackMap = {
   VK_V: {
@@ -154,58 +148,4 @@ async function go(times = 3, type) {
   }
 }
 
-function anotherGo() {
-  const v = new GlobalKeyboardListener()
-  function listener(event) {
-    // 按下 esc 的時候終止, 不知道為什麼有時候會失效，應該是 stack 的問題
-    if (event.name === 'ESCAPE') {
-      timeoutList.forEach((timer) => clearTimeout(timer))
-      console.log('Dinner time!')
-      v.removeListener(listener)
-    }
-  }
-  v.addListener(listener)
-
-  // backup
-  // 'behavior/left-right-1.json'
-  // 'behavior/left-right-2.json'
-  // 'behavior/left-right-3.json'
-
-  const left = [
-    { from: 'left', to: 'top', file: './behavior/left-top-1.json', steps: null },
-    { from: 'left', to: 'top', file: './behavior/left-top-2.json', steps: null },
-    { from: 'left', to: 'top', file: './behavior/left-top-3.json', steps: null },
-    { from: 'left', to: 'bottom', file: './behavior/left-bottom-1.json', steps: null },
-    { from: 'left', to: 'bottom', file: './behavior/left-bottom-2.json', steps: null },
-  ]
-  const top = [
-    { from: 'top', to: 'left', file: './behavior/top-middle-1.json', steps: null },
-    { from: 'top', to: 'left', file: './behavior/top-middle-2.json', steps: null },
-  ]
-  const bottom = [
-    { from: 'bottom', to: 'left', file: './behavior/bottom-middle-1.json', steps: null },
-    { from: 'bottom', to: 'left', file: './behavior/bottom-middle-2.json', steps: null },
-  ]
-  const moveMap = { left, top, bottom }
-
-  Object.keys(moveMap).forEach((keys) => {
-    moveMap[keys].forEach((move) => {
-      const fileName = move.file
-      const fileContent = fs.readFileSync(fileName, 'utf8')
-      move.steps = JSON.parse(fileContent)
-    })
-  })
-
-  async function start(from = 'left') {
-    const index = Math.floor(Math.random() * moveMap[from].length)
-    const move = moveMap[from][index]
-    console.log('current move: ', move.file)
-    await replayStar(move.steps)
-
-    start(move.to)
-  }
-
-  start()
-}
-
-export { replayStar, go, anotherGo }
+export { replayStar, go }

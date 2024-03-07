@@ -135,19 +135,6 @@ function getMarketResult(x, y) {
   return getTextByOffset(x, y, 搜尋結果左上_offset, 搜尋結果右下_offset, 'chi_tra')
 }
 
-async function isHasResult(x, y) {
-  const resultText = await getTextByOffset(x, y, 搜尋結果左上_offset, 搜尋結果右下_offset, 'chi_tra')
-  const centerText = await getCenterMessage(x, y)
-
-  if (centerText === '查無此道具。') return false
-
-  if (resultText !== '搜尋結果') return false
-
-  if (!(await checkPage(x, y))) return false
-
-  return true
-}
-
 async function checkPage(x, y) {
   const pageText = await getTextByOffset(x, y, 頁碼左上_offset, 頁碼右下_offset)
 
@@ -330,19 +317,19 @@ export async function market() {
   let boughtNumber = 0
 
   boughtNumber = await 買防具({ x, y, boughtNumber, price: 60000, level: 130, message: '開始買 130 防具' })
-  if (!checkMax(boughtNumber, bagSize)) return
+  if (!checkMax(boughtNumber, bagSize)) return true
   console.log('')
 
   boughtNumber = await 買武器({ x, y, boughtNumber, price: 60000, level: 130, message: '開始買 130 武器' })
-  if (!checkMax(boughtNumber, bagSize)) return
+  if (!checkMax(boughtNumber, bagSize)) return true
   console.log('')
 
   boughtNumber = await 買防具({ x, y, boughtNumber, message: '開始買 108 防具' })
-  if (!checkMax(boughtNumber, bagSize)) return
+  if (!checkMax(boughtNumber, bagSize)) return true
   console.log('')
 
   boughtNumber = await 買武器({ x, y, boughtNumber, message: '開始買 108 武器' })
-  if (!checkMax(boughtNumber, bagSize)) return
+  if (!checkMax(boughtNumber, bagSize)) return true
   console.log('')
 
   pressEnter()
@@ -376,6 +363,7 @@ async function getTextByOffset(x, y, startOffset, endOffset, language = 'eng') {
   return recognizedText.replace(/\s+/g, '')
 }
 
+// 開始前的倒數
 async function beforeStart(sec = 5) {
   console.log(`Start in ${sec} sec`)
 
@@ -385,7 +373,7 @@ async function beforeStart(sec = 5) {
   }
 }
 
-function getApplicationInfo(showConsole = true) {
+export function getApplicationInfo(showConsole = true) {
   const applicationTitle = getForegroundWindowTitle()
   const { left: x, top: y, right: endX, bottom: endY } = getForegroundWindowRect()
   const width = endX - x
@@ -540,55 +528,6 @@ async function buySingle(x, y) {
   await delay()
 }
 
-async function buy(buyTimes = 1, eachRoundItems = 10) {
-  const { x, y } = getApplicationInfo()
-
-  for (let i = 0; i < buyTimes; i++) {
-    // click search button
-    _moveMouseByOffset(x, y, searchOffset)
-    await delay()
-    clickMouse()
-    await delay()
-
-    // buy 10 items once
-    for (let j = 0; j < eachRoundItems; j++) {
-      // click first item
-      _moveMouseByOffset(x, y, firstItemOffset)
-      await delay()
-      clickMouse()
-      await delay()
-
-      // click buy button
-      _moveMouseByOffset(x, y, buyButtonOffset)
-      await delay()
-      clickMouse()
-      await delay()
-
-      pressEnter()
-      await delay(800)
-
-      pressEnter()
-      await delay()
-    }
-
-    // move to complete button
-    _moveMouseByOffset(x, y, completeOffset)
-    await delay()
-    clickMouse()
-    await delay()
-
-    // move to accept all recieved items
-    _moveMouseByOffset(x, y, recievedButtonOffset)
-    await delay()
-    clickMouse()
-    await delay()
-    pressEnter()
-    await delay(7500)
-    pressEnter()
-    await delay()
-  }
-}
-
 function _moveMouseByOffset(x, y, offestPayload, { steps = 5000, randomX = 10, randomY = 10 } = {}) {
   moveMouseWithBezier(
     undefined,
@@ -613,7 +552,7 @@ function displayMousePosition() {
   }, 1000)
 }
 
-// 處理一下不能分解的東西
+// TODO 處理一下不能分解的東西
 async function extract(itemsCount = 70) {
   const { x, y } = getApplicationInfo()
 
@@ -757,4 +696,33 @@ async function ocean() {
   }, 1000)
 }
 
-export { delay, beforeStart, getApplicationInfo, buy, extract, displayMousePosition, ocean }
+export function promiseTest() {
+  // 測試 promise.race 就算已經有一個回來了， nodejs 還是會被另一個卡住
+  const a = function () {
+    return new Promise((resolve) => {
+      let i = 0
+      setInterval(() => {
+        i++
+        console.log(i)
+        if (i === 10) {
+          resolve(1)
+        }
+      }, 1000)
+    })
+  }
+  const b = function () {
+    return new Promise((resolve) => {
+      let i = 0
+      setInterval(() => {
+        i++
+        console.log(i)
+        if (i === 5) {
+          resolve(2)
+        }
+      }, 1000)
+    })
+  }
+  Promise.race([a(), b()]).then((r) => console.log(r))
+}
+
+export { delay, beforeStart, extract, displayMousePosition, ocean }
