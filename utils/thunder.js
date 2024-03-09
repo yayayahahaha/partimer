@@ -73,7 +73,7 @@ const buffList = [
   {
     code: 'delete',
     vkCode: 'VK_DELETE',
-    coldTime: 33 * 1000,
+    coldTime: 45 * 1000,
     priority: false,
     previousTimestamp: Date.now(),
   },
@@ -401,8 +401,8 @@ export async function anotherGo() {
     attackThrough({ direction: 'left', times: 5, goBack: halfChance(), afterDelay: 200 })
     hop()
 
-    attackThrough({ direction: 'left', times: 2, goBack: halfChance(), moveFirst: false })
-    attackThrough({ direction: 'right', times: 3, goBack: false, afterDelay: 200 })
+    attackThrough({ direction: 'left', times: 1, goBack: false, moveFirst: false })
+    attackThrough({ direction: 'right', times: 2, goBack: false, afterDelay: 200 })
     hop()
 
     attackThrough({ direction: 'right', times: 5, goBack: halfChance() })
