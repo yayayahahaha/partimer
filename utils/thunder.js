@@ -25,55 +25,55 @@ const buffList = [
     code: '2',
     vkCode: 'VK_2',
     coldTime: 123 * 1000,
-    previousTimestamp: 0,
+    previousTimestamp: Date.now() + 123,
   },
   {
     code: '3',
     vkCode: 'VK_3',
     coldTime: 123 * 1000,
-    previousTimestamp: 0,
+    previousTimestamp: Date.now() + 123,
   },
   {
     code: '4',
     vkCode: 'VK_4',
     coldTime: 243 * 1000,
-    previousTimestamp: 0,
+    previousTimestamp: Date.now() + 243,
   },
   {
     code: 'home',
     vkCode: 'VK_HOME',
     coldTime: 183 * 1000,
-    previousTimestamp: 0,
+    previousTimestamp: Date.now() + 183,
   },
   {
     code: 'end',
     vkCode: 'VK_END',
     coldTime: 123 * 1000,
-    previousTimestamp: 0,
+    previousTimestamp: Date.now() + 123,
   },
   {
     code: 'pagedown',
     vkCode: 'VK_NEXT',
     coldTime: 63 * 1000,
-    previousTimestamp: 0,
+    previousTimestamp: Date.now() + 63,
   },
   {
     code: 'delete',
     vkCode: 'VK_DELETE',
     coldTime: 33 * 1000,
-    previousTimestamp: 0,
+    previousTimestamp: Date.now() + 33,
   },
   /*  {
     code: 'h',
     vkCode: 'VK_h',
     coldTime: 363 * 1000,
-    previousTimestamp: 0,
+    previousTimestamp: Date.now() + 363,
   },*/
 ]
 async function attack({ afterDelay = 10 } = {}) {
   // 雖然已經很近了，但每個技能還是多少有一些時間差
   // 不設定這個的話霹靂可以更快，但位置會跑掉
-  rb.setKeyboardDelay(Math.ceil(Math.random() * 5) + 75)
+  rb.setKeyboardDelay(Math.ceil(Math.random() * 20) + 75)
 
   let alreayAttack = false
   const current = Date.now()
@@ -84,7 +84,7 @@ async function attack({ afterDelay = 10 } = {}) {
       rb.keyTap(attack.code)
 
       // 隨機讓他更久一些
-      attack.previousTimestamp = Date.now() - Math.round(Math.random() * 2000)
+      attack.previousTimestamp = Date.now() + Math.round(Math.random() * 2000)
     }
   }
 
@@ -217,22 +217,22 @@ export async function anotherGo() {
     horizonMove()
 
     if (stuffList.length === 0) stuffList = createStuffList()
+    console.log('stuffList:', stuffList)
+
     toFn = stuffList.splice(0, 1)[0]
     toFn()
-
-    console.log('stuffList:', stuffList)
   }
 
-  function horizonMove() {
+  function horizonMove(test = false) {
     const times = Math.ceil(Math.random() * 4)
-    console.log(`horizonMove times: ${times}`)
+    test && console.log(`horizonMove times: ${times}`)
     for (let i = 0; i < times; i++) {
       attackThrough({ direction: 'right', times: 5, goBack: Math.random() > 0.5 })
       buffStuff()
       attackThrough({ direction: 'left', times: 5, goBack: Math.random() > 0.5 })
       buffStuff()
 
-      console.log(`還有 ${times - i - 1} 趟`)
+      test && console.log(`還有 ${times - i - 1} 趟`)
     }
   }
 
@@ -257,32 +257,32 @@ export async function anotherGo() {
     attackThrough({ direction: 'left', times: 5, goBack: Math.random() > 0.5 })
   }
   function rightStuff() {
-    attackThrough({ direction: 'right', times: 5, goBack: Math.random() > 0.5, afterDelay: 200 })
+    attackThrough({ direction: 'right', times: 6, goBack: Math.random() > 0.5, afterDelay: 200 })
     hop()
 
     buffStuff()
 
     attackThrough({ direction: 'right', times: 2, goBack: Math.random() > 0.5 })
-    attackThrough({ direction: 'left', times: 3, goBack: Math.random() > 0.5, afterDelay: 200 })
+    attackThrough({ direction: 'left', times: 3, goBack: false, afterDelay: 200 })
     hop()
 
     attackThrough({ direction: 'left', times: 5, goBack: Math.random() > 0.5 })
   }
   function leftStuff() {
     attackThrough({ direction: 'right', times: 3, goBack: Math.random() > 0.5 })
-    attackThrough({ direction: 'left', times: 4, goBack: Math.random() > 0.5, afterDelay: 200 })
+    attackThrough({ direction: 'left', times: 5, goBack: Math.random() > 0.5, afterDelay: 200 })
     hop()
 
     buffStuff()
 
     attackThrough({ direction: 'left', times: 2, goBack: Math.random() > 0.5 })
-    attackThrough({ direction: 'right', times: 3, goBack: Math.random() > 0.5, afterDelay: 200 })
+    attackThrough({ direction: 'right', times: 3, goBack: false, afterDelay: 200 })
     hop()
 
     attackThrough({ direction: 'right', times: 5, goBack: Math.random() > 0.5 })
     attackThrough({ direction: 'left', times: 5, goBack: Math.random() > 0.5 })
   }
-  function buffStuff() {
+  function buffStuff(test = false) {
     const current = Date.now()
 
     // 一次放幾個技能
@@ -296,10 +296,10 @@ export async function anotherGo() {
         rb.setKeyboardDelay(1000 + Math.floor(Math.random() * 200))
         rb.keyTap(buff.code)
 
-        console.log(`buff: ${buff.code}`)
+        test && console.log(`buff: ${buff.code}`)
 
         // 隨機讓他更久一些
-        buff.previousTimestamp = Date.now() - Math.round(Math.random() * 2000)
+        buff.previousTimestamp = Date.now() + Math.round(Math.random() * 2000)
 
         buffCount--
 

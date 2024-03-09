@@ -475,6 +475,7 @@ async function waitUntil({ x, y, message, maxWait = 5000, interval = 100, place 
   ])
 }
 
+// TODO 當沒有東西要回收的時候要不要提早結束，目前等到 timeout 的話也不會出錯
 async function recieveItems(x, y) {
   pressEnter()
   await delay()
