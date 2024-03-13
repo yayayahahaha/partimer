@@ -1,4 +1,32 @@
 import rb from 'robotjs'
+import { GlobalKeyboardListener } from 'node-global-key-listener'
+const keyboardListener = new GlobalKeyboardListener()
+
+const nDefault = 2
+let nCount = 2
+let isPause = false
+
+export function listenerStuff() {
+  const globalListener = function (e, down /* 當前按壓著的案件 map */) {
+    // console.log(`${e.name}, ${e.state == 'DOWN' ? 'DOWN' : 'UP  '}, [${e.rawKey._nameRaw}]`)
+
+    console.log(nCount)
+
+    if (e.name === 'N') {
+      if (e.state == 'DOWN') nCount--
+    } else nCount = nDefault
+
+    if (nCount === 0) {
+      if (isPause) {
+        keyboardListener.removeListener(globalListener)
+
+        anotherGo()
+        isPause = false
+      } else isPause = true
+    }
+  }
+  keyboardListener.addListener(globalListener)
+}
 
 const attackList = [
   {
@@ -139,6 +167,8 @@ function buffStuff(test = false) {
 }
 
 async function attack({ afterDelay = null } = {}) {
+  if (isPause) throw 'pause'
+
   // 攻擊前放 buff
   buffStuff()
 
@@ -280,18 +310,24 @@ function randomNumber(max = 10, min = 1) {
 // 1. 輪
 // 2. 其他玩家
 // 3. 自己本身的位子是不是跑到最下面了
+// 4. 不透過 ctrl + tab 就可以暫停的方式
 export async function anotherGo() {
+  // TODO 在 robot 在跑的時候，這個 listenerStuff 就不會作用了
+  // 可能要改成判斷螢幕上的東西來做停止? 像是地名之類的
+  // listenerStuff()
+
   let stuffList = createStuffList()
   let toFn = (f) => f
 
+  halfChance() && horizonMove()
   for (let i = 0; i < 100; i++) {
-    horizonMove()
-
     if (stuffList.length === 0) stuffList = createStuffList()
     console.log('stuffList:', stuffList)
 
     toFn = stuffList.splice(0, 1)[0]
     toFn()
+
+    horizonMove()
   }
 
   function horizonMove(test = false) {

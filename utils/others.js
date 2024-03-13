@@ -570,7 +570,7 @@ async function extract(itemsCount = 70) {
 
   // into the town, turn on map name, scale up the bag size, move bag to aline with the map name.
   // please according the first items you want to extract define the veryFirstStart.
-  let row = 4
+  let row = 5
   let column = 5
   const eachBlockSize = 42
   const firstCoordinate = { x: 30, y: 155 }
