@@ -18,7 +18,7 @@ function _keyIn(str) {
   }
 }
 
-const bagSize = 80 // TEST codes
+const bagSize = 65
 const searchOffset = { x: 120, y: 120 }
 const firstItemOffset = { x: 950, y: 230 }
 const buyButtonOffset = { x: 950, y: 750 }
@@ -55,6 +55,9 @@ const 武器重置_offset = { x: 136, y: 631 }
 const 武器等級_offset = { x: 118, y: 368 }
 const 武器價格_offset = { x: 216, y: 396 }
 const 武器搜尋_offset = { x: 220, y: 637 }
+
+const 背包整理_offest = { x: 172, y: 486 }
+const 背包向上_offest = { x: 208, y: 496 }
 
 // 得要是英文輸入才可以
 async function englishMarket(x, y) {
@@ -222,11 +225,11 @@ async function buyByOffset(config) {
 
   async function buyRoundRecursive() {
     await _buyRecursive()
-    await recieveItems(x, y)
+    const recievedSuccess = await recieveItems(x, y)
 
     await goToSearch(x, y)
 
-    if (boughtNumber < bagSize && (await checkPage(x, y))) {
+    if (recievedSuccess && boughtNumber < bagSize && (await checkPage(x, y))) {
       await buyRoundRecursive()
     }
   }
@@ -299,7 +302,7 @@ async function clearMarket(x, y) {
   const level = 300
 
   await setPriceAndLevel(x, y, { 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset, price, level })
-  await delay(5000)
+  await delay(3000)
 }
 
 export async function market() {
@@ -476,7 +479,7 @@ async function waitUntil({ x, y, message, maxWait = 5000, interval = 100, place 
 }
 
 // TODO 當沒有東西要回收的時候要不要提早結束，目前等到 timeout 的話也不會出錯
-async function recieveItems(x, y) {
+export async function recieveItems(x, y) {
   pressEnter()
   await delay()
 
@@ -496,15 +499,23 @@ async function recieveItems(x, y) {
   await waitUntil({
     x,
     y,
-    message: '已完成',
+    message: ['已完成', '只能持有'],
     maxWait: 15 * 1000,
+  })
+
+  const complete = await waitUntil({
+    x,
+    y,
+    message: '已完成',
+    maxWait: 1 * 1000,
   })
 
   pressEnter()
   await delay()
+
+  return complete
 }
 
-// TODO 只能持有一個的場景
 async function buySingle(x, y) {
   _moveMouseByOffset(x, y, firstItemOffset)
   await delay()
@@ -547,31 +558,36 @@ function displayMousePosition() {
     const [ax, ay] = getCurrentCoordinate()
     console.log('absolute position: ', ax, ay)
     console.log('application position: ', x, y)
-    // console.log('color: ', rb.getPixelColor(713 + x, 493 + y))
+    console.log('color: ', rb.getPixelColor(997, 543))
     console.log('offset position: ', ax - x, ay - y)
     console.log()
   }, 1000)
 }
 
-// TODO 處理一下不能分解的東西
-async function extract(itemsCount = 70) {
+async function extract(itemsCount = 65, { paramRow = 5, paramColumn = 5 } = {}) {
   const { x, y } = getApplicationInfo()
 
   const townName = await waitUntil({ x, y, maxWait: 60 * 1000, message: '梅斯特', place: 'town' })
   if (townName == null) return void console.log('回不去鎮上。。。')
 
+  // 開啟物品欄 -> 點選裝備
   rb.keyTap('i')
   await delay()
-
   _moveMouseByOffset(x, y, 裝備_offset, { randomX: 2, randomY: 2 })
   await delay()
+  clickMouse()
+  await delay()
+  _moveMouseByOffset(x, y, 背包整理_offest, { randomX: 2, randomY: 2 })
+  clickMouse()
+  await delay()
+  _moveMouseByOffset(x, y, 背包向上_offest, { randomX: 2, randomY: 2 })
   clickMouse()
   await delay()
 
   // into the town, turn on map name, scale up the bag size, move bag to aline with the map name.
   // please according the first items you want to extract define the veryFirstStart.
-  let row = 5
-  let column = 5
+  let row = paramRow // 第一個要被分解的物品的座標
+  let column = paramColumn // 第一個要被分解的物品的座標
   const eachBlockSize = 42
   const firstCoordinate = { x: 30, y: 155 }
 
@@ -592,6 +608,8 @@ async function extract(itemsCount = 70) {
     await delay(50)
     clickRightMouse()
     await delay(50)
+
+    _checkHasExtraHint()
 
     const { row: nRow, column: nColumn } = _toNextRowColumn(row, column)
     row = nRow
@@ -661,6 +679,13 @@ async function extract(itemsCount = 70) {
       y: firstCoordinate.y + (row - 1) * eachBlockSize,
     }
     return offset
+  }
+
+  function _checkHasExtraHint() {
+    const hintOkPoint = { x: x + 791, y: y + 444, color: '99dd00' }
+    const hintOkColor = rb.getPixelColor(hintOkPoint.x, hintOkPoint.y)
+    const hasMessage = hintOkColor === hintOkPoint.color
+    if (hasMessage) pressEnter()
   }
 }
 

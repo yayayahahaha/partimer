@@ -268,7 +268,7 @@ function turn(direction = 'left') {
   rb.keyToggle(direction, 'up')
   rb.setKeyboardDelay(10)
 }
-function goUp() {
+function goUp({ type = 'top' } = {}) {
   rb.setKeyboardDelay(randomNumber(130, 100))
   rb.keyToggle('up', 'down')
 
@@ -278,7 +278,7 @@ function goUp() {
   rb.setKeyboardDelay(10)
   rb.keyToggle('up', 'up')
   rb.setKeyboardDelay(randomNumber(530, 500))
-  rb.keyTap('d')
+  type === 'top' && rb.keyTap('d')
   rb.setKeyboardDelay(10)
 }
 function goDown({ delay = 500 } = {}) {
@@ -432,16 +432,46 @@ export async function anotherGo() {
       attackThrough({ direction: 'left', times: 2, goBack: false, moveFirst: false })
     }
   }
-  function leftStuff() {
-    attackThrough({ direction: 'right', times: 3, goBack: halfChance() })
-    attackThrough({ direction: 'left', times: 5, goBack: halfChance(), afterDelay: 200 })
-    hop()
+  function leftStuff(way = randomNumber(2)) {
+    switch (way) {
+      case 1:
+        return _leftStuff1()
 
-    attackThrough({ direction: 'left', times: 1, goBack: false, moveFirst: false })
-    attackThrough({ direction: 'right', times: 2, goBack: false, afterDelay: 200 })
-    hop()
+      case 2:
+      default:
+        return _leftStuff2()
+    }
 
-    attackThrough({ direction: 'right', times: 5, goBack: halfChance() })
-    attackThrough({ direction: 'left', times: 5, goBack: halfChance() })
+    function _leftStuff1() {
+      attackThrough({ direction: 'right', times: 3, goBack: halfChance() })
+      attackThrough({ direction: 'left', times: 5, goBack: halfChance(), afterDelay: 200 })
+      hop()
+
+      attackThrough({ direction: 'left', times: 1, goBack: false, moveFirst: false })
+      attackThrough({ direction: 'right', times: 2, goBack: false, afterDelay: 200 })
+      hop()
+
+      attackThrough({ direction: 'right', times: 5, goBack: halfChance() })
+      attackThrough({ direction: 'left', times: 5, goBack: halfChance() })
+    }
+
+    function _leftStuff2() {
+      attackThrough({ direction: 'right', times: 5, goBack: halfChance(), afterDelay: 200 })
+      hop()
+
+      attackThrough({ direction: 'right', times: 2, goBack: halfChance(), moveFirst: false })
+      goUp({ type: 'jump' })
+
+      attackThrough({ direction: 'left', times: 4, goBack: false, afterDelay: 200 })
+      hop()
+
+      attackThrough({ direction: 'left', times: 2, goBack: false, moveFirst: false, afterDelay: 200 })
+      hop()
+
+      attackThrough({ direction: 'left', times: 1, goBack: false, moveFirst: false })
+      attackThrough({ direction: 'right', times: 2, goBack: false })
+
+      goDown()
+    }
   }
 }
