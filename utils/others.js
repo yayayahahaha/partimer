@@ -112,6 +112,7 @@ export async function marketAndExtract() {
   await extract()
 
   console.log('結束囉!')
+  return marketResult // for recursive stuff
 }
 
 function getCenterMessage(x, y) {
@@ -218,9 +219,11 @@ async function buyByOffset(config) {
   }
 
   let boughtNumber = preBoughtNumber
-  await buyRoundRecursive()
+  const buyRoundResult = await buyRoundRecursive()
 
   console.log(`總共買了 ${boughtNumber} 個!`)
+
+  if (buyRoundResult == null) return null
   return boughtNumber
 
   async function buyRoundRecursive() {
@@ -232,6 +235,9 @@ async function buyByOffset(config) {
     if (recievedSuccess && boughtNumber < bagSize && (await checkPage(x, y))) {
       await buyRoundRecursive()
     }
+
+    if (!recievedSuccess) return null
+    return true
   }
 
   async function _buyRecursive(previousBuy = 0) {
@@ -302,9 +308,12 @@ async function clearMarket(x, y) {
   const level = 300
 
   await setPriceAndLevel(x, y, { 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset, price, level })
-  await delay(3000)
+  await delay(3500)
 }
 
+export const MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS = 'has-item-which-can-only-have-one-status'
+export const MARKET_MATCH_MAX_STATYS = 'match-max-status'
+export const MARKET_NO_MORE_STATUS = 'no-more-status'
 export async function market() {
   const { x, y } = getApplicationInfo()
 
@@ -320,25 +329,29 @@ export async function market() {
   let boughtNumber = 0
 
   boughtNumber = await 買防具({ x, y, boughtNumber, price: 60000, level: 130, message: '開始買 130 防具' })
-  if (!checkMax(boughtNumber, bagSize)) return true
+  if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
+  if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
 
   boughtNumber = await 買武器({ x, y, boughtNumber, price: 60000, level: 130, message: '開始買 130 武器' })
-  if (!checkMax(boughtNumber, bagSize)) return true
+  if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
+  if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
 
   boughtNumber = await 買防具({ x, y, boughtNumber, message: '開始買 108 防具' })
-  if (!checkMax(boughtNumber, bagSize)) return true
+  if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
+  if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
 
   boughtNumber = await 買武器({ x, y, boughtNumber, message: '開始買 108 武器' })
-  if (!checkMax(boughtNumber, bagSize)) return true
+  if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
+  if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
 
   pressEnter()
   console.log('市場結束囉!')
 
-  return true
+  return { status: MARKET_NO_MORE_STATUS }
 }
 
 async function goToSearch(x, y) {
@@ -689,39 +702,6 @@ async function extract(itemsCount = 65, { paramRow = 5, paramColumn = 5 } = {}) 
   }
 }
 
-async function ocean() {
-  const knife = {
-    key: 't',
-    current: 0,
-    wait: 10 * 1000,
-  }
-  const wind = {
-    key: 'f',
-    current: 0,
-    wait: 12 * 1000,
-  }
-
-  let count = 0
-  setInterval(() => {
-    const list = [knife, wind]
-    for (let i = 0; i < list.length; i++) {
-      const item = list[i]
-
-      if (Date.now() - item.current > item.wait) {
-        rb.keyTap(count % 2 === 0 ? 'left' : 'right')
-        delay()
-
-        rb.keyTap(item.key)
-        delay()
-        item.current = Date.now()
-        break
-      }
-    }
-
-    count++
-  }, 1000)
-}
-
 export function promiseTest() {
   // 測試 promise.race 就算已經有一個回來了， nodejs 還是會被另一個卡住
   const a = function () {
@@ -751,4 +731,4 @@ export function promiseTest() {
   Promise.race([a(), b()]).then((r) => console.log(r))
 }
 
-export { delay, beforeStart, extract, displayMousePosition, ocean }
+export { delay, beforeStart, extract, displayMousePosition }
