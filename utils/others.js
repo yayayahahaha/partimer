@@ -328,22 +328,22 @@ export async function market() {
 
   let boughtNumber = 0
 
-  boughtNumber = await 買防具({ x, y, boughtNumber, price: 60000, level: 130, message: '開始買 130 防具' })
+  boughtNumber = await 買防具({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 防具' })
   if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
 
-  boughtNumber = await 買武器({ x, y, boughtNumber, price: 60000, level: 130, message: '開始買 130 武器' })
+  boughtNumber = await 買武器({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 武器' })
   if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
 
-  boughtNumber = await 買防具({ x, y, boughtNumber, message: '開始買 108 防具' })
+  boughtNumber = await 買防具({ x, y, boughtNumber, price: 50000, message: '開始買 108 防具' })
   if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
 
-  boughtNumber = await 買武器({ x, y, boughtNumber, message: '開始買 108 武器' })
+  boughtNumber = await 買武器({ x, y, boughtNumber, price: 50000, message: '開始買 108 武器' })
   if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
@@ -577,7 +577,7 @@ function displayMousePosition() {
   }, 1000)
 }
 
-async function extract(itemsCount = 65, { paramRow = 5, paramColumn = 5 } = {}) {
+async function extract(itemsCount = 65, { paramRow = 4, paramColumn = 8 } = {}) {
   const { x, y } = getApplicationInfo()
 
   const townName = await waitUntil({ x, y, maxWait: 60 * 1000, message: '梅斯特', place: 'town' })
@@ -629,7 +629,7 @@ async function extract(itemsCount = 65, { paramRow = 5, paramColumn = 5 } = {}) 
     column = nColumn
     offset = _getOffsetByCoordinate(row, column)
 
-    if (index % 5 === 0) {
+    if (index % 10 === 0) {
       // 先移到空白的地方, 避免那些道具詳情影響畫面
       _moveMouseByOffset(x, y, { x: confirmOffset.x + 50, y: confirmOffset.y + 50 }, { randomX: 5, randomY: 2 })
       await delay()
