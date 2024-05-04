@@ -7,6 +7,8 @@ async function start() {
 
   anotherGo()
 
+  // tears()
+
   // displayMousePosition()
 
   // marketAndExtract()
