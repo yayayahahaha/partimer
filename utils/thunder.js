@@ -1,57 +1,6 @@
 import rb from 'robotjs'
-import { GlobalKeyboardListener } from 'node-global-key-listener'
-const keyboardListener = new GlobalKeyboardListener()
-import { keyboardAction } from './keyboard-control.js'
 
-const nDefault = 2
-let nCount = 2
-let isPause = false
-
-export function listenerStuff() {
-  const globalListener = function (e, down /* 當前按壓著的案件 map */) {
-    // console.log(`${e.name}, ${e.state == 'DOWN' ? 'DOWN' : 'UP  '}, [${e.rawKey._nameRaw}]`)
-
-    console.log(nCount)
-
-    if (e.name === 'N') {
-      if (e.state == 'DOWN') nCount--
-    } else nCount = nDefault
-
-    if (nCount === 0) {
-      if (isPause) {
-        keyboardListener.removeListener(globalListener)
-
-        anotherGo()
-        isPause = false
-      } else isPause = true
-    }
-  }
-  keyboardListener.addListener(globalListener)
-}
-
-const attackList = [
-  {
-    code: 'g',
-    vkCode: 'VK_G',
-    coldTime: 9 * 1000,
-    delayTime: 100,
-    previousTimestamp: Date.now() + 5000,
-  },
-  {
-    code: 'a',
-    vkCode: 'VK_A',
-    coldTime: 13 * 1000,
-    delayTime: 75,
-    previousTimestamp: Date.now() + 5000,
-  },
-  {
-    code: 'y',
-    vkCode: 'VK_Y',
-    coldTime: 46 * 1000,
-    delayTime: 75,
-    previousTimestamp: Date.now() + 5000,
-  },
-]
+let doBuff = true
 const buffBetweenEach = {
   coldTime: 3 * 1000,
   previousTimestamp: 0,
@@ -174,10 +123,30 @@ function buffStuff(test = false) {
   rb.setKeyboardDelay(10)
 }
 
-let doBuff = true
-async function attack({ afterDelay = null } = {}) {
-  if (isPause) throw 'pause'
-
+const attackList = [
+  {
+    code: 'g',
+    vkCode: 'VK_G',
+    coldTime: 9 * 1000,
+    delayTime: 100,
+    previousTimestamp: Date.now() + 5000,
+  },
+  {
+    code: 'a',
+    vkCode: 'VK_A',
+    coldTime: 13 * 1000,
+    delayTime: 75,
+    previousTimestamp: Date.now() + 5000,
+  },
+  {
+    code: 'y',
+    vkCode: 'VK_Y',
+    coldTime: 46 * 1000,
+    delayTime: 75,
+    previousTimestamp: Date.now() + 5000,
+  },
+]
+async function attack({ useDefault = false, afterDelay = null } = {}) {
   // 攻擊前放 buff
   doBuff && buffStuff()
 
@@ -188,7 +157,7 @@ async function attack({ afterDelay = null } = {}) {
 
   let alreayAttack = false
   const current = Date.now()
-  for (let i = 0; i < attackList.length; i++) {
+  for (let i = 0; i < attackList.length && !useDefault; i++) {
     const attack = attackList[i]
     if (attack.previousTimestamp + attack.coldTime < current) {
       alreayAttack = true
@@ -211,42 +180,44 @@ async function attack({ afterDelay = null } = {}) {
   }
 }
 
-function attackThrough({ times = 5, direction = 'left', goBack = false, moveFirst = true, afterDelay = 100 } = {}) {
+function attackThrough({ times = 5, direction = 'left', goBack = false, moveFirst = true, afterDelay = 200 } = {}) {
   if (moveFirst) turn(direction)
 
   if (!goBack) {
     for (let i = 0; i < times - 1; i++) {
       attack()
     }
-    attack({ afterDelay })
+    attack({ afterDelay, useDefault: true })
     return
   }
 
   if (halfChance()) _endAndTurn()
   else _halfAndTurn()
 
+  // 走到底再回頭
   function _endAndTurn() {
     const turnStep = randomNumber(Math.ceil(times / 2))
     for (let i = 0; i < times - 1; i++) {
       attack()
     }
-    attack({ afterDelay })
+    attack({ afterDelay, useDefault: true })
 
     direction === 'left' ? turn('right') : turn('left')
 
     for (let i = 0; i < turnStep - 1; i++) {
       attack()
     }
-    attack({ afterDelay })
+    attack({ afterDelay, useDefault: true })
 
     turn(direction)
 
     for (let i = 0; i < turnStep - 1; i++) {
       attack()
     }
-    attack({ afterDelay })
+    attack({ afterDelay, useDefault: true })
   }
 
+  // 走到一半回頭
   function _halfAndTurn() {
     const halfStep = Math.ceil(times / 2)
     const halfhalfStep = Math.ceil(halfStep / 2)
@@ -254,27 +225,26 @@ function attackThrough({ times = 5, direction = 'left', goBack = false, moveFirs
     for (let i = 0; i < halfhalfStep - 1; i++) {
       attack()
     }
-    attack({ afterDelay })
+    attack({ afterDelay, useDefault: true })
 
     direction === 'left' ? turn('right') : turn('left')
 
     for (let i = 0; i < halfhalfStep - 1; i++) {
       attack()
     }
-    attack({ afterDelay })
+    attack({ afterDelay, useDefault: true })
 
     turn(direction)
 
     for (let i = 0; i < times - halfStep + halfhalfStep; i++) {
       attack()
     }
-    attack({ afterDelay })
+    attack({ afterDelay, useDefault: true })
   }
 }
 function turn(direction = 'left') {
-  rb.setKeyboardDelay(randomNumber(70, 50))
-  rb.keyToggle(direction, 'down')
-  rb.keyToggle(direction, 'up')
+  rb.setKeyboardDelay(50)
+  rb.keyTap(direction)
   rb.setKeyboardDelay(10)
 }
 function goUp({ type = 'top' } = {}) {
@@ -286,7 +256,7 @@ function goUp({ type = 'top' } = {}) {
   rb.keyTap('alt')
   rb.setKeyboardDelay(10)
   rb.keyToggle('up', 'up')
-  rb.setKeyboardDelay(randomNumber(530, 500))
+  rb.setKeyboardDelay(randomNumber(630, 600))
   type === 'top' && rb.keyTap('d')
   rb.setKeyboardDelay(10)
 }
@@ -300,17 +270,23 @@ function goDown({ delay = 500 } = {}) {
   rb.setKeyboardDelay(10)
 }
 function hop() {
-  rb.setKeyboardDelay(60)
+  delay(50)
+
+  rb.setKeyboardDelay(randomNumber(100, 50))
   rb.keyTap('d')
   rb.setKeyboardDelay(randomNumber(310, 300))
   rb.keyTap('w')
   rb.setKeyboardDelay(10)
 }
-export function jumpForward() {
+function jumpFar() {
+  rb.setKeyboardDelay(100)
+  rb.keyTap('alt')
+  rb.setKeyboardDelay(100)
+  rb.keyTap('alt')
   rb.setKeyboardDelay(150)
-  rb.keyTap('alt')
-  rb.keyTap('alt')
-  rb.setKeyboardDelay(10)
+  rb.keyTap('d')
+  rb.setKeyboardDelay(50)
+  rb.keyTap('w')
 }
 function halfChance() {
   return Math.random() > 0.5
@@ -321,7 +297,9 @@ function randomNumber(max = 10, min = 1) {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-let previousMoveTimes = 0
+export function test() {
+  hop()
+}
 
 // TODO 檢查顏色的部分
 // 1. 輪
@@ -331,7 +309,7 @@ let previousMoveTimes = 0
 export async function anotherGo() {
   // TODO 在 robot 在跑的時候，這個 listenerStuff 就不會作用了
   // 可能要改成判斷螢幕上的東西來做停止? 像是地名之類的
-  // listenerStuff()
+  justStuff()
 
   let stuffList = createStuffList()
   let toFn = (f) => f
@@ -341,7 +319,7 @@ export async function anotherGo() {
 
   halfChance() && horizonMove()
   for (let i = 0; i < 100; i++) {
-    if (i % 5 === 0 || i % randomNumber(3, 2) === 0) checkAround()
+    if (i % 4 === 0 || i % randomNumber(3, 2) === 0) checkAround()
 
     checkStuff()
 
@@ -363,12 +341,10 @@ export async function anotherGo() {
   }
 
   function horizonMove(test = false) {
-    const moveTimes = randomNumber(previousMoveTimes !== 3 ? 3 : 1)
+    const moveTimes = randomNumber(2, 1)
     const times = randomNumber(6, 4)
 
-    previousMoveTimes = moveTimes
-
-    console.log('horizonMove: ', moveTimes, times)
+    console.log(`${moveTimes} times ${times} steps`)
 
     test && console.log(`horizonMove moveTimes: ${moveTimes}`)
     for (let i = 0; i < moveTimes; i++) {
@@ -380,12 +356,91 @@ export async function anotherGo() {
   }
 
   function createStuffList() {
-    return [upStuff, rightStuff, leftStuff].sort(() => Math.random() - 0.5)
+    return [upStuff, rightStuff, leftStuff, justStuff].sort(() => Math.random() - 0.5)
   }
   function createRoundList() {
     const r1 = () => around(1)
     const r2 = () => around(2)
-    return [r1, r2, r1, r2].sort(() => Math.random() - 0.5)
+    const r3 = () => around(3)
+
+    const list = [r1, r2, r1, r2].sort(() => Math.random() - 0.5)
+    const randomIndex = randomNumber(list.length) - 1
+    list.splice(randomIndex, 0, r3)
+    list.splice((randomIndex + 2) % list.length, 0, r3)
+
+    return list
+  }
+
+  function justStuff(way = randomNumber(3)) {
+    console.log('just stuff: ', way)
+    switch (way) {
+      case 1:
+        return _justStuff1()
+      case 2:
+        return _justStuff2()
+      case 3:
+      default:
+        return _justStuff3()
+    }
+
+    function _justStuff1() {
+      right(3)
+      left(4, false)
+      right(2)
+      jumpFar()
+      justAttack(2)
+      left(3)
+      jumpFar()
+      justAttack(2)
+      right(3)
+      goDown()
+      left(2, false)
+      goDown()
+      right(1, false)
+      left(2)
+    }
+
+    function _justStuff2() {
+      right(2)
+      left(3, false)
+      hop()
+      justAttack(1)
+      right(2, false)
+      jumpFar()
+      justAttack(1)
+      hop()
+      justAttack(3)
+      left(1, false)
+      goDown()
+      justAttack(2)
+      hop()
+      justAttack(3)
+    }
+
+    function _justStuff3() {
+      right(2, false)
+      justAttack(1)
+      hop()
+      justAttack(2)
+      left(3, false)
+      jumpFar()
+      justAttack(1)
+      hop()
+      justAttack(2)
+      right(3, false)
+      hop()
+      justAttack(1)
+      hop()
+      right(2, false)
+      left(4, false)
+      jumpFar()
+      justAttack(2)
+      goDown()
+      right(2)
+      goDown()
+      right(1, false)
+      left(2)
+    }
   }
 
   function upStuff(way = randomNumber(2)) {
@@ -401,35 +456,35 @@ export async function anotherGo() {
 
     function _upStuff1() {
       goUp()
-      attackThrough({ direction: 'right', times: 2, goBack: false })
-      attackThrough({ direction: 'left', times: 2, goBack: halfChance() })
-      attackThrough({ direction: 'right', times: 3, goBack: halfChance() })
+      right(2, false)
+      left(2, false)
+      right(3)
       goDown()
 
-      attackThrough({ direction: 'right', times: 1, goBack: false, moveFirst: false })
-      attackThrough({ direction: 'left', times: 2, goBack: halfChance() })
-      attackThrough({ direction: 'right', times: 3, goBack: halfChance() })
+      justAttack(1)
+      left(2)
+      right(3)
       goDown()
 
-      attackThrough({ direction: 'right', times: 1, goBack: false, moveFirst: false })
-      attackThrough({ direction: 'left', times: 5, goBack: halfChance() })
+      justAttack(1)
+      left(5)
     }
 
     function _upStuff2() {
-      attackThrough({ direction: 'right', times: 2, goBack: halfChance() })
-      attackThrough({ direction: 'left', times: 3, goBack: false, afterDelay: 200 })
+      right(2)
+      left(3, false)
       hop()
 
-      attackThrough({ direction: 'left', times: 1, goBack: false, moveFirst: false })
-      attackThrough({ direction: 'right', times: 2, goBack: false })
+      justAttack(1)
+      right(2, false)
       goUp()
 
-      attackThrough({ direction: 'right', times: 3, goBack: halfChance() })
-      attackThrough({ direction: 'left', times: 3, goBack: false })
+      right(3)
+      left(3, false)
       goDown()
 
-      attackThrough({ direction: 'left', times: 1, goBack: false })
-      attackThrough({ direction: 'right', times: 3, goBack: false })
+      left(1, false)
+      right(3, false)
       goDown()
     }
   }
@@ -444,36 +499,36 @@ export async function anotherGo() {
     }
 
     function _rightStuff1() {
-      attackThrough({ direction: 'right', times: 6, goBack: halfChance(), afterDelay: 200 })
+      right(6)
       hop()
 
-      attackThrough({ direction: 'right', times: 2, goBack: halfChance() })
-      attackThrough({ direction: 'left', times: 3, goBack: false, afterDelay: 200 })
+      justAttack(2)
+      left(3, false)
       hop()
 
-      attackThrough({ direction: 'left', times: 5, goBack: halfChance() })
+      left(5)
     }
 
     function _rightStuff2() {
-      attackThrough({ direction: 'right', times: 2, goBack: false })
-      attackThrough({ direction: 'left', times: 3, goBack: false })
+      right(2, false)
+      left(3, false)
       goUp()
 
-      attackThrough({ direction: 'right', times: 2, goBack: false })
+      right(2, false)
       goDown()
 
-      attackThrough({ direction: 'left', times: 2, goBack: halfChance() })
-      attackThrough({ direction: 'right', times: 3, goBack: false, afterDelay: 200 })
+      left(2)
+      right(3, false)
       hop()
 
-      attackThrough({ direction: 'right', times: 3, goBack: halfChance() })
-      attackThrough({ direction: 'left', times: 3, goBack: false, afterDelay: 200 })
+      right(3)
+      left(3, false)
       hop()
 
-      attackThrough({ direction: 'left', times: 2, goBack: false })
+      left(2, false)
       goDown()
 
-      attackThrough({ direction: 'left', times: 2, goBack: false, moveFirst: false })
+      justAttack(2)
     }
   }
   function leftStuff(way = randomNumber(2)) {
@@ -488,33 +543,33 @@ export async function anotherGo() {
     }
 
     function _leftStuff1() {
-      attackThrough({ direction: 'right', times: 3, goBack: halfChance() })
-      attackThrough({ direction: 'left', times: 5, goBack: halfChance(), afterDelay: 200 })
+      right(3)
+      left(5)
       hop()
 
-      attackThrough({ direction: 'left', times: 1, goBack: false, moveFirst: false })
-      attackThrough({ direction: 'right', times: 2, goBack: false, afterDelay: 200 })
+      justAttack(1)
+      right(2, false)
       hop()
 
-      attackThrough({ direction: 'right', times: 5, goBack: halfChance() })
-      attackThrough({ direction: 'left', times: 5, goBack: halfChance() })
+      right(5)
+      left(5)
     }
 
     function _leftStuff2() {
-      attackThrough({ direction: 'right', times: 5, goBack: halfChance(), afterDelay: 200 })
+      right(5)
       hop()
 
-      attackThrough({ direction: 'right', times: 2, goBack: halfChance(), moveFirst: false })
+      justAttack(2)
       goUp({ type: 'jump' })
 
-      attackThrough({ direction: 'left', times: 4, goBack: false, afterDelay: 200 })
+      left(4, false)
       hop()
 
-      attackThrough({ direction: 'left', times: 2, goBack: false, moveFirst: false, afterDelay: 200 })
+      justAttack(2)
       hop()
 
-      attackThrough({ direction: 'left', times: 1, goBack: false, moveFirst: false })
-      attackThrough({ direction: 'right', times: 2, goBack: false })
+      justAttack(1)
+      right(2, false)
 
       goDown()
     }
@@ -524,128 +579,267 @@ export async function anotherGo() {
     switch (way) {
       case 1:
         return _aroundStuff1()
+
       case 2:
-      default:
         return _aroundStuff2()
+
+      case 3:
+      default:
+        return _aroundStuff3()
     }
 
     function _aroundStuff1() {
-      attackThrough({ direction: 'right', times: 4, goBack: halfChance(), afterDelay: 200 })
+      right(4)
       hop()
 
-      attackThrough({ direction: 'right', times: 2, goBack: halfChance(), moveFirst: false })
+      justAttack(2)
       goUp({ type: 'jump' })
 
-      attackThrough({ direction: 'left', times: 3, goBack: halfChance(), afterDelay: 200 })
+      left(4)
       hop()
 
-      attackThrough({ direction: 'left', times: 2, goBack: false, moveFirst: false, afterDelay: 200 })
+      justAttack(3)
       hop()
 
-      attackThrough({ direction: 'left', times: 2, goBack: false, moveFirst: false, afterDelay: 200 })
-      attackThrough({ direction: 'right', times: 2, goBack: halfChance() })
+      justAttack(2)
+      right(2)
       goUp({ type: 'jump' })
 
-      attackThrough({ direction: 'left', times: 2, goBack: halfChance(), afterDelay: 200 })
-      attackThrough({ direction: 'right', times: 3, goBack: halfChance(), afterDelay: 200 })
+      left(2)
+      right(3)
       goDown()
 
-      attackThrough({ direction: 'right', times: 2, goBack: halfChance(), afterDelay: 200 })
+      right(2)
       goDown()
 
-      attackThrough({ direction: 'left', times: 3, goBack: halfChance(), afterDelay: 200 })
+      left(3)
     }
 
     function _aroundStuff2() {
-      attackThrough({ direction: 'right', times: 3, goBack: halfChance(), afterDelay: 200 })
-      attackThrough({ direction: 'left', times: 4, goBack: halfChance(), afterDelay: 200 })
+      right(3)
+      left(4)
       hop()
 
-      attackThrough({ direction: 'left', times: 2, goBack: false, moveFirst: false, afterDelay: 200 })
-      attackThrough({ direction: 'right', times: 2, goBack: halfChance(), afterDelay: 200 })
+      justAttack(2)
+      right(2)
       goUp({ type: 'jump' })
 
-      attackThrough({ direction: 'right', times: 1, goBack: false, moveFirst: false, afterDelay: 200 })
+      justAttack(1)
       hop()
 
-      attackThrough({ direction: 'right', times: 2, goBack: halfChance(), moveFirst: false, afterDelay: 200 })
+      justAttack(2)
       hop()
 
-      attackThrough({ direction: 'right', times: 3, goBack: halfChance(), moveFirst: false, afterDelay: 200 })
-      attackThrough({ direction: 'left', times: 3, goBack: halfChance(), afterDelay: 200 })
+      justAttack(3)
+      left(3)
       hop()
 
-      attackThrough({ direction: 'left', times: 1, goBack: false, moveFirst: false, afterDelay: 200 })
+      justAttack(1)
       goUp({ type: 'jump' })
 
-      attackThrough({ direction: 'left', times: 2, goBack: false, moveFirst: false, afterDelay: 200 })
+      justAttack(2)
       goDown()
 
-      attackThrough({ direction: 'right', times: 2, goBack: halfChance(), afterDelay: 200 })
+      right(2)
       goDown()
+    }
+
+    function _aroundStuff3() {
+      right(3, false)
+      goDown()
+
+      right(3, false)
+      left(3, false)
+      left(3)
+      left(3, false)
+      right(1, false)
+      goUp({ type: 'jump' })
+
+      right(3, false)
+      goDown()
+
+      right(3)
+      hop()
+      right(2)
+      goUp({ type: 'jump' })
+
+      left(4)
+      jumpFar()
+      justAttack(2)
+      goDown()
+
+      right(2)
+      goDown()
+
+      right(1, false)
+      left(3)
     }
   }
 }
 
-export async function tears() {
-  doBuff = false
+export function movie() {
+  const createMovieList = () => [type1, type2].sort(() => Math.random() - 0.5)
 
+  let fn = null
+  let fnList = createMovieList()
   for (let i = 0; i < 100; i++) {
-    // tearsRound()
-    tearsRound2()
+    fnList = fnList.length === 0 ? createMovieList() : fnList
+
+    console.log('fnList:', fnList)
+    fn = fnList.splice(0, 1)[0]
+    fn()
   }
 
-  function tearsRound2() {
-    attackThrough({ direction: 'left', times: 1, goBack: false })
-    // goUp({ type: 'jump' })
-    for (let i = 0; i < 12; i++) {
-      hop()
-    }
-    attackThrough({ direction: 'right', times: 15, goBack: false })
-  }
-
-  function tearsRound() {
-    attackThrough({ direction: 'left', times: 7, goBack: false, afterDelay: 200 })
+  function type1() {
+    right(3)
+    left(4, false)
     hop()
-    goDown()
-    attackThrough({ direction: 'left', times: 1, goBack: false, moveFirst: false, afterDelay: 200 })
+    right(2)
+    justAttack(1)
     hop()
-    attackThrough({ direction: 'left', times: 2, goBack: false, moveFirst: false })
-
-    attackThrough({ direction: 'right', times: 2, goBack: false, afterDelay: 200 })
+    justAttack(1)
     hop()
-    attackThrough({ direction: 'right', times: 2, goBack: false, moveFirst: false, afterDelay: 200 })
+    justAttack(1)
     hop()
-    attackThrough({ direction: 'right', times: 7, goBack: false })
-  }
-}
-
-export async function bridge() {
-  for (let i = 0; i < 100; i++) {
-    bridgeRound()
-  }
-
-  function bridgeRound() {
-    attackThrough({ direction: 'right', times: randomNumber(5, 4), goBack: true })
-    attackThrough({ direction: 'left', times: randomNumber(5, 4), goBack: true })
-
-    attackThrough({ direction: 'right', times: 2, goBack: false })
+    right(3)
+    left(2)
+    right(3)
+    left(1, false)
     goUp({ type: 'jump' })
-    attackThrough({ direction: 'right', times: 3, goBack: false, moveFirst: false, afterDelay: 200 })
-    hop()
-    attackThrough({ direction: 'right', times: 3, goBack: false, moveFirst: false, afterDelay: 200 })
-    attackThrough({ direction: 'left', times: 3, goBack: false, afterDelay: 200 })
-    hop()
-    attackThrough({ direction: 'left', times: 3, goBack: false, moveFirst: false, afterDelay: 200 })
-    hop()
-    attackThrough({ direction: 'left', times: 3, goBack: false, moveFirst: false, afterDelay: 200 })
+    justAttack(3)
+    jumpFar()
+    justAttack(2)
     goDown()
-    attackThrough({ direction: 'right', times: 10, goBack: true, afterDelay: 200 })
-    attackThrough({ direction: 'left', times: 4, goBack: false, afterDelay: 200 })
+    justAttack(1)
+    goDown()
+    right(2)
+    goDown()
+  }
+  function type2() {
+    goDown()
+    right(3, false)
+    right(3)
+    justAttack(1)
+    left(1, false)
     goUp()
-    attackThrough({ direction: 'left', times: 2, goBack: false, afterDelay: 200 })
+    justAttack(3)
+    hop()
+    justAttack(1)
+    hop()
+    justAttack(2)
+    left(2)
     goDown()
-    attackThrough({ direction: 'left', times: 1, goBack: false, afterDelay: 200 })
+    right(2)
+    goDown()
+    left(3)
+  }
+  function type3() {
+    right(3)
+    justAttack(1)
+    goUp()
+
+    left(3)
+    justAttack(1)
+    goDown()
+
+    right(1)
+    justAttack(1)
+    goDown()
+
+    justAttack(2)
+    hop()
+
+    justAttack(2)
+    hop()
+
+    right(4)
+    left(1, false)
+    goUp({ type: 'jump' })
+
+    justAttack(2)
+    left(3, false)
+    justAttack(1)
+    goDown()
+    justAttack(1)
+    goDown()
+    justAttack(2)
+    goDown()
+    justAttack(2)
+    left(5)
+    right(2, false)
+    goUp({ type: 'jump' })
+    justAttack(3)
+    goDown()
+    justAttack(2)
+    goDown()
+    left(3)
+  }
+}
+
+export function wild() {
+  const wListFn = () => [w_type1, w_type2].sort(() => Math.random() - 0.5)
+  // const wListFn = () => [w_type2].sort(() => Math.random() - 0.5)
+  let wList = []
+
+  for (let i = 0; i < 100; i++) {
+    if (wList.length === 0) wList = wListFn()
+    console.log(wList)
+    wList.splice(0, 1)[0]()
+  }
+
+  function w_type1() {
+    right(3)
+    justAttack(1)
+    hop()
+    justAttack(1)
+    right(3)
+    goDown()
+    jumpFar()
+    justAttack(1)
+    left(3)
+    hop()
+    justAttack(1)
+    right(2)
+
+    goUp({ type: 'jump' })
+    justAttack(1)
+    left(2)
+    hop()
+    justAttack(2)
+    goDown()
+    right(1)
+    left(3)
+    jumpFar()
+    justAttack(1)
+    right(1)
+    goDown()
+    left(2)
+  }
+
+  function w_type2() {
+    goDown()
+    right(5, false)
+    right(5)
+    left(2, false)
+    goUp({ type: 'jump' })
+    justAttack(3)
+    jumpFar()
+    justAttack(2)
+    goDown()
+    right(3)
+    justAttack(1)
+    goUp({ type: 'jump' })
+    justAttack(1)
+    left(3)
+    hop()
+    justAttack(2)
+    jumpFar()
+    justAttack(1)
+    goDown()
+    right(2)
+    left(1)
+    goDown()
+    left(2, false)
   }
 }
 
@@ -664,4 +858,3 @@ function delay(msec = 200) {
   rb.keyTap('7')
   rb.setKeyboardDelay(10)
 }
-

@@ -329,21 +329,25 @@ export async function market() {
   let boughtNumber = 0
 
   boughtNumber = await 買防具({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 防具' })
+  await delay(2000)
   if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
 
   boughtNumber = await 買武器({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 武器' })
+  await delay(2000)
   if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
 
   boughtNumber = await 買防具({ x, y, boughtNumber, price: 50000, message: '開始買 108 防具' })
+  await delay(2000)
   if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
 
   boughtNumber = await 買武器({ x, y, boughtNumber, price: 50000, message: '開始買 108 武器' })
+  await delay(2000)
   if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
@@ -577,7 +581,7 @@ function displayMousePosition() {
   }, 1000)
 }
 
-async function extract(itemsCount = 65, { paramRow = 4, paramColumn = 8 } = {}) {
+async function extract(itemsCount = 65, { paramRow = 6, paramColumn = 5 } = {}) {
   const { x, y } = getApplicationInfo()
 
   const townName = await waitUntil({ x, y, maxWait: 60 * 1000, message: '梅斯特', place: 'town' })
