@@ -613,7 +613,7 @@ async function extract(itemsCount = 65, { paramRow = 6, paramColumn = 5 } = {}) 
   const eachBlockSize = 42
   const firstCoordinate = { x: 30, y: 155 }
 
-  const extractOpenOffset = { x: 505, y: 489 }
+  const extractOpenOffset = { x: 485, y: 489 }
   const confirmOffset = { x: 730, y: 499 }
 
   let offset = _getOffsetByCoordinate(row, column)

@@ -1,4 +1,5 @@
 import rb from 'robotjs'
+import { GlobalKeyboardListener } from 'node-global-key-listener'
 
 let doBuff = true
 const buffBetweenEach = {
@@ -678,7 +679,7 @@ export async function anotherGo() {
 }
 
 export function movie() {
-  const createMovieList = () => [type1, type2].sort(() => Math.random() - 0.5)
+  const createMovieList = () => [type1].sort(() => Math.random() - 0.5)
 
   let fn = null
   let fnList = createMovieList()
@@ -692,87 +693,36 @@ export function movie() {
 
   function type1() {
     right(3)
-    left(4, false)
     hop()
     right(2)
-    justAttack(1)
     hop()
-    justAttack(1)
-    hop()
-    justAttack(1)
-    hop()
+    right(2)
+    goUp()
     right(3)
-    left(2)
-    right(3)
-    left(1, false)
-    goUp({ type: 'jump' })
-    justAttack(3)
+    left(4)
     jumpFar()
-    justAttack(2)
-    goDown()
-    justAttack(1)
-    goDown()
-    right(2)
-    goDown()
-  }
-  function type2() {
-    goDown()
-    right(3, false)
-    right(3)
-    justAttack(1)
-    left(1, false)
-    goUp()
     justAttack(3)
     hop()
-    justAttack(1)
-    hop()
     justAttack(2)
+    right(3)
+    goDown()
     left(2)
-    goDown()
-    right(2)
-    goDown()
-    left(3)
   }
-  function type3() {
-    right(3)
-    justAttack(1)
-    goUp()
+}
 
-    left(3)
-    justAttack(1)
-    goDown()
+export async function _100() {
+  const v = new GlobalKeyboardListener()
+  const globalListener = function (e, down /* 當前按壓著的案件 map */) {
+    console.log(e.name)
+    if (e.name === 'SPACE') _start()
+  }
+  v.addListener(globalListener)
 
-    right(1)
-    justAttack(1)
-    goDown()
-
-    justAttack(2)
-    hop()
-
-    justAttack(2)
-    hop()
-
-    right(4)
-    left(1, false)
-    goUp({ type: 'jump' })
-
-    justAttack(2)
-    left(3, false)
-    justAttack(1)
-    goDown()
-    justAttack(1)
-    goDown()
-    justAttack(2)
-    goDown()
-    justAttack(2)
-    left(5)
-    right(2, false)
-    goUp({ type: 'jump' })
-    justAttack(3)
-    goDown()
-    justAttack(2)
-    goDown()
-    left(3)
+  async function _start() {
+    for (var i = 0; i < 100; i++) {
+      rb.keyTap('space')
+      await delay(800)
+    }
   }
 }
 

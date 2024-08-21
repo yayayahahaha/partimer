@@ -2,10 +2,14 @@ import rb from 'robotjs'
 
 
 // 因為要在不同的系統開發的關係，這樣比較方便
-import { beforeStart, getApplicationInfo } from './others.js'
+import { beforeStart, getApplicationInfo, displayMousePosition } from './others.js'
 
 async function start() {
   await beforeStart(3)
+
+  // displayMousePosition()
+
+  // return
 
   const colorMap = {
     'ffaabb': 'red',
@@ -31,24 +35,30 @@ async function start() {
     blue: 'right'
   }
 
-  rb.setKeyboardDelay(5)
+  rb.setKeyboardDelay(0)
 
   const { x, y } = getApplicationInfo()
 
-  function check() {
-    const color = rb.getPixelColor(x + 518, y + 524)
+  let count = 0
 
+  function check() {
+    const fever = rb.getPixelColor(x + 607, y + 715)
+    if (fever === 'ffffff') {
+      rb.keyTap('space')
+      return check()
+    }
+
+    const color = rb.getPixelColor(x + 518, y + 524)
     const arrowKey = arrow[colorMap[color]]
     if (arrow[colorMap[color]]) {
       // console.log(arrowKey)
       rb.keyTap(arrowKey)
-      rb.keyTap('space')
+      count++
     } else {
       console.log(color)
     }
 
     check()
-
   }
   check( )
 
