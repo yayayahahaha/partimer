@@ -251,7 +251,7 @@ async function buyByOffset(config) {
     boughtNumber += 1
     console.log(`目前買了 ${boughtNumber} 個`)
 
-    if (currentBuy === 10) return currentBuy
+    if (currentBuy === 100) return currentBuy
     return _buyRecursive(currentBuy)
   }
 }
@@ -328,13 +328,16 @@ export async function market() {
 
   let boughtNumber = 0
 
-/*
+
+  // 買防具的部分會買到不能分解的東西，這部分還要想要怎麼跳過
+  /*
   boughtNumber = await 買防具({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 防具' })
   await delay(2000)
   if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
-*/
+  */
+
 
   boughtNumber = await 買武器({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 武器' })
   await delay(2000)
@@ -342,13 +345,15 @@ export async function market() {
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
 
-/*
+
+  /*
   boughtNumber = await 買防具({ x, y, boughtNumber, price: 50000, message: '開始買 108 防具' })
   await delay(2000)
   if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
-*/
+  */
+
 
   boughtNumber = await 買武器({ x, y, boughtNumber, price: 50000, message: '開始買 108 武器' })
   await delay(2000)
@@ -521,7 +526,7 @@ export async function recieveItems(x, y) {
     x,
     y,
     message: ['已完成', '只能持有'],
-    maxWait: 15 * 1000,
+    maxWait: 120 * 1000, // 這個可以改成依照買的數量做動態變動, 之前 10 個的話是 15 秒
   })
 
   const complete = await waitUntil({
