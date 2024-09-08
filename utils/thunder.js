@@ -70,12 +70,13 @@ const buffList = [
     priority: false,
     previousTimestamp: Date.now(),
   },
-  /*  {
-    code: 'h',
-    vkCode: 'VK_h',
-    coldTime: 363 * 1000,
-    previousTimestamp: Date.now() + 363,
-  },*/
+  {
+    code: '6',
+    vkCode: 'VK_6',
+    coldTime: 63 * 1000,
+    priority: false,
+    previousTimestamp: Date.now(),
+  },
 ]
 function buffStuff(test = false) {
   const current = Date.now()
