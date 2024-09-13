@@ -1,5 +1,4 @@
 import rb from 'robotjs'
-import { GlobalKeyboardListener } from 'node-global-key-listener'
 
 let doBuff = true
 const buffBetweenEach = {
@@ -708,89 +707,6 @@ export function movie() {
     right(3)
     goDown()
     left(2)
-  }
-}
-
-export async function _100() {
-  const v = new GlobalKeyboardListener()
-  const globalListener = function (e, down /* 當前按壓著的案件 map */) {
-    console.log(e.name)
-    if (e.name === 'SPACE') _start()
-  }
-  v.addListener(globalListener)
-
-  async function _start() {
-    for (var i = 0; i < 100; i++) {
-      rb.keyTap('space')
-      await delay(800)
-    }
-  }
-}
-
-export function wild() {
-  const wListFn = () => [w_type1, w_type2].sort(() => Math.random() - 0.5)
-  // const wListFn = () => [w_type2].sort(() => Math.random() - 0.5)
-  let wList = []
-
-  for (let i = 0; i < 100; i++) {
-    if (wList.length === 0) wList = wListFn()
-    console.log(wList)
-    wList.splice(0, 1)[0]()
-  }
-
-  function w_type1() {
-    right(3)
-    justAttack(1)
-    hop()
-    justAttack(1)
-    right(3)
-    goDown()
-    jumpFar()
-    justAttack(1)
-    left(3)
-    hop()
-    justAttack(1)
-    right(2)
-
-    goUp({ type: 'jump' })
-    justAttack(1)
-    left(2)
-    hop()
-    justAttack(2)
-    goDown()
-    right(1)
-    left(3)
-    jumpFar()
-    justAttack(1)
-    right(1)
-    goDown()
-    left(2)
-  }
-
-  function w_type2() {
-    goDown()
-    right(5, false)
-    right(5)
-    left(2, false)
-    goUp({ type: 'jump' })
-    justAttack(3)
-    jumpFar()
-    justAttack(2)
-    goDown()
-    right(3)
-    justAttack(1)
-    goUp({ type: 'jump' })
-    justAttack(1)
-    left(3)
-    hop()
-    justAttack(2)
-    jumpFar()
-    justAttack(1)
-    goDown()
-    right(2)
-    left(1)
-    goDown()
-    left(2, false)
   }
 }
 

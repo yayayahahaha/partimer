@@ -328,7 +328,6 @@ export async function market() {
 
   let boughtNumber = 0
 
-
   // 買防具的部分會買到不能分解的東西，這部分還要想要怎麼跳過
   /*
   boughtNumber = await 買防具({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 防具' })
@@ -338,13 +337,11 @@ export async function market() {
   console.log('')
   */
 
-
   boughtNumber = await 買武器({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 武器' })
   await delay(2000)
   if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
-
 
   /*
   boughtNumber = await 買防具({ x, y, boughtNumber, price: 50000, message: '開始買 108 防具' })
@@ -353,7 +350,6 @@ export async function market() {
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
   */
-
 
   boughtNumber = await 買武器({ x, y, boughtNumber, price: 50000, message: '開始買 108 武器' })
   await delay(2000)
@@ -714,35 +710,6 @@ async function extract(itemsCount = 65, { paramRow = 6, paramColumn = 5 } = {}) 
     const hasMessage = hintOkColor === hintOkPoint.color
     if (hasMessage) pressEnter()
   }
-}
-
-export function promiseTest() {
-  // 測試 promise.race 就算已經有一個回來了， nodejs 還是會被另一個卡住
-  const a = function () {
-    return new Promise((resolve) => {
-      let i = 0
-      setInterval(() => {
-        i++
-        console.log(i)
-        if (i === 10) {
-          resolve(1)
-        }
-      }, 1000)
-    })
-  }
-  const b = function () {
-    return new Promise((resolve) => {
-      let i = 0
-      setInterval(() => {
-        i++
-        console.log(i)
-        if (i === 5) {
-          resolve(2)
-        }
-      }, 1000)
-    })
-  }
-  Promise.race([a(), b()]).then((r) => console.log(r))
 }
 
 export { delay, beforeStart, extract, displayMousePosition }
