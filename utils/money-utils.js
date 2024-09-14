@@ -29,6 +29,9 @@ const completeOffset = { x: 920, y: 120 }
 const recievedButtonOffset = { x: 970, y: 170 }
 const 頁碼左上_offset = { x: 619, y: 156 }
 const 頁碼右下_offset = { x: 668, y: 176 }
+// 分解欄位的按鈕的座標
+const extractOpenOffset = { x: 485, y: 489 }
+const confirmOffset = { x: 809, y: 510 }
 
 const MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS = 'has-item-which-can-only-have-one-status'
 const MARKET_MATCH_MAX_STATYS = 'match-max-status'
@@ -38,8 +41,13 @@ export const MARKET_NO_MORE_STATUS = 'no-more-status'
 // 讓右上角的小地圖包含地圖名稱一起顯示
 // 把包包移動到切齊地圖名稱下緣、剛好遮住小地圖
 // 然後把 extract function 的座標設定為第一個想要分解的物品  let row = paramRow // 第一個要被分解的物品的座標
-export async function extract(maxItems = bagSize, { paramRow = 6, paramColumn = 5 } = {}) {
+export async function extract({ paramRow = 6, paramColumn = 5 } = {}) {
   const { x, y } = getApplicationInfo()
+  const confirmColor = {
+    ax: x + confirmOffset.x,
+    ay: y + confirmOffset.y,
+    color: 'ddfffff',
+  }
 
   // 等待畫面中 place: town 的地方的文字變成 梅斯特 的意思
   const townName = await waitUntil({ x, y, maxWait: 60 * 1000, message: '梅斯特', place: 'town' })
@@ -74,24 +82,15 @@ export async function extract(maxItems = bagSize, { paramRow = 6, paramColumn = 
   const eachBlockSize = 42
   const firstCoordinate = { x: 30, y: 155 }
 
-  // 開啟分解欄位的按鈕的座標
-  const extractOpenOffset = { x: 485, y: 489 }
-  const confirmOffset = { x: 809, y: 510 }
-
   // 開啟分解框
   _moveMouseByOffset(x, y, extractOpenOffset, { randomX: 2, randomY: 2 })
   await delay()
   clickMouse()
   await delay()
 
-  const confirmColor = {
-    ax: x + confirmOffset.x,
-    ay: y + confirmOffset.y,
-    color: 'ddfffff',
-  }
-
   let offset = null
-  for (let index = 1; index <= maxItems; index++) {
+  let allowMissing = 3
+  for (let index = 1; index <= Infinity; index++) {
     offset = _getOffsetByCoordinate(row, column)
     _moveMouseByOffset(x, y, offset, { randomX: 3, randomY: 3 })
     await delay(50)
@@ -100,6 +99,15 @@ export async function extract(maxItems = bagSize, { paramRow = 6, paramColumn = 
 
     // 檢查是不是不能分解的東西、會跳出一個框的那種，會自動把他按掉
     _checkHasExtraHint()
+
+    // 檢查是不是做了點擊的動作之後，仍舊符合關閉的條件
+    if (rb.getPixelColor(confirmColor.ax - 5, confirmColor.ay - 5) !== 'ffffff') {
+      allowMissing--
+      if (allowMissing === 0) {
+        console.log('已經沒了!')
+        break
+      }
+    }
 
     const { row: nRow, column: nColumn } = _toNextRowColumn(row, column)
     row = nRow

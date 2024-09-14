@@ -6,20 +6,6 @@ async function start() {
   await beforeStart(3)
 
   anotherGo()
-
-  // tears()
-
-  // displayMousePosition()
-
-  // marketAndExtract()
-
-  // market()
-  // extract()
-
-  // go(3, './behavior/tears-2.json')
-  // go(5, './behavior/ture-power.json')
-
-  // ocean()
 }
 
 export { start }
