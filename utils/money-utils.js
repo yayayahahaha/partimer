@@ -455,7 +455,7 @@ async function buyByOffset(config) {
     // 超過包包了
     if (boughtNumber >= bagSize) return previousBuy
 
-    await buySingle(x, y)
+    await buy(x, y)
     const currentBuy = previousBuy + 1
     boughtNumber += 1
     console.log(`目前買了 ${boughtNumber} 個`)
@@ -465,8 +465,11 @@ async function buyByOffset(config) {
   }
 }
 
-async function checkPage(x, y) {
-  const pageText = await getTextByOffset(x, y, 頁碼左上_offset, 頁碼右下_offset)
+export async function getCurrentPage(x, y) {
+  return getTextByOffset(x, y, 頁碼左上_offset, 頁碼右下_offset)
+}
+export async function checkPage(x, y) {
+  const pageText = await getCurrentPage(x, y)
 
   if (!/\d+\/?\d+/.test(pageText)) return null
   if (pageText === '0/0') return null
@@ -512,8 +515,12 @@ export async function recieveItems(x, y) {
   return complete
 }
 
-async function buySingle(x, y) {
-  _moveMouseByOffset(x, y, firstItemOffset)
+const itemOffset = 55
+const firstItem左上offset = { x: 349, y: 225 }
+const firstItem右下offset = { x: 448, y: 251 }
+
+export async function buy(x, y, offset = firstItemOffset) {
+  _moveMouseByOffset(x, y, offset)
   await delay()
   clickMouse()
   await delay()
