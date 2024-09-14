@@ -1,4 +1,5 @@
-import { beforeStart, marketAndExtract, MARKET_NO_MORE_STATUS } from './utils/others.js'
+import { MARKET_NO_MORE_STATUS } from './utils/money-utils.js'
+import { beforeStart, marketAndExtract } from './utils/others.js'
 
 async function start() {
   await beforeStart(3)

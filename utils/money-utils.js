@@ -32,7 +32,7 @@ const 頁碼右下_offset = { x: 668, y: 176 }
 
 const MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS = 'has-item-which-can-only-have-one-status'
 const MARKET_MATCH_MAX_STATYS = 'match-max-status'
-const MARKET_NO_MORE_STATUS = 'no-more-status'
+export const MARKET_NO_MORE_STATUS = 'no-more-status'
 
 // 進入城鎮
 // 讓右上角的小地圖包含地圖名稱一起顯示
