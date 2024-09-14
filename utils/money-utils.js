@@ -89,7 +89,6 @@ export async function extract({ paramRow = 6, paramColumn = 5 } = {}) {
   await delay()
 
   let offset = null
-  let allowMissing = 3
   for (let index = 1; index <= Infinity; index++) {
     offset = _getOffsetByCoordinate(row, column)
     _moveMouseByOffset(x, y, offset, { randomX: 3, randomY: 3 })
@@ -100,10 +99,12 @@ export async function extract({ paramRow = 6, paramColumn = 5 } = {}) {
     // 檢查是不是不能分解的東西、會跳出一個框的那種，會自動把他按掉
     _checkHasExtraHint()
 
-    // 檢查是不是做了點擊的動作之後，仍舊符合關閉的條件
-    if (rb.getPixelColor(confirmColor.ax - 5, confirmColor.ay - 5) !== 'ffffff') {
-      allowMissing--
-      if (allowMissing === 0) {
+    if (index % 5 === 0) {
+      // 檢查是不是做了點擊的動作之後，仍舊符合關閉的條件
+      // 也是要先移動去空白的地方，不然會被情詳遮到
+      _moveMouseByOffset(x, y, { x: confirmOffset.x + 50, y: confirmOffset.y + 50 }, { randomX: 5, randomY: 2 })
+      await delay()
+      if (rb.getPixelColor(confirmColor.ax - 5, confirmColor.ay - 5) !== 'ffffff') {
         console.log('已經沒了!')
         break
       }
