@@ -24,8 +24,8 @@ const 搜尋結果右下_offset = { x: 355, y: 180 }
 const 中央訊息左上_offset = { x: 435, y: 414 }
 const 中央訊息右下_offset = { x: 583, y: 437 }
 
-const 分解訊息左上_offset = { x: 650, y: 473 }
-const 分解訊息右下_offset = { x: 730, y: 500 }
+const 分解訊息左上_offset = { x: 651, y: 392 }
+const 分解訊息右下_offset = { x: 727, y: 420 }
 const 離開_offset = { x: 977, y: 56 }
 const 鎮名左上_Offset = { x: 135, y: 60 }
 const 鎮名右下_Offset = { x: 188, y: 80 }
@@ -235,16 +235,18 @@ export function _moveMouseByOffset(x, y, offestPayload, { steps = 5000, randomX 
 }
 
 function displayMousePosition() {
-  const { x, y } = getApplicationInfo()
-  setInterval(() => {
-    const [ax, ay] = getCurrentCoordinate()
-    console.log('absolute position: ', ax, ay)
-    console.log('application position: ', x, y)
-    // console.log('color: ', rb.getPixelColor(997, 543))
-    console.log('color: ', rb.getPixelColor(ax - 2, ay - 2))
-    console.log('offset position: ', ax - x, ay - y)
-    console.log()
-  }, 1000)
+  const { x, y, applicationTitle } = getApplicationInfo()
+
+  const [ax, ay] = getCurrentCoordinate()
+  console.log('applicationTitle:', applicationTitle)
+  console.log('absolute position: ', ax, ay)
+  console.log('application position: ', x, y)
+  // console.log('color: ', rb.getPixelColor(997, 543))
+  console.log('color: ', rb.getPixelColor(ax - 5, ay - 5))
+  console.log('offset position: ', ax - x, ay - y)
+  console.log()
+
+  setTimeout(displayMousePosition, 1000)
 }
 
 export { delay, beforeStart, displayMousePosition }

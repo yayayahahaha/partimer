@@ -34,51 +34,71 @@ const MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS = 'has-item-which-can-only-
 const MARKET_MATCH_MAX_STATYS = 'match-max-status'
 const MARKET_NO_MORE_STATUS = 'no-more-status'
 
-export async function extract(itemsCount = 65, { paramRow = 6, paramColumn = 5 } = {}) {
+// 進入城鎮
+// 讓右上角的小地圖包含地圖名稱一起顯示
+// 把包包移動到切齊地圖名稱下緣、剛好遮住小地圖
+// 然後把 extract function 的座標設定為第一個想要分解的物品  let row = paramRow // 第一個要被分解的物品的座標
+export async function extract(maxItems = bagSize, { paramRow = 6, paramColumn = 5 } = {}) {
   const { x, y } = getApplicationInfo()
 
+  // 等待畫面中 place: town 的地方的文字變成 梅斯特 的意思
   const townName = await waitUntil({ x, y, maxWait: 60 * 1000, message: '梅斯特', place: 'town' })
-  if (townName == null) return void console.log('回不去鎮上。。。')
+  if (townName == null) return void console.log('這裡是哪裡，我要去鎮上')
 
   // 開啟物品欄 -> 點選裝備
   rb.keyTap('i')
-  await delay()
-  _moveMouseByOffset(x, y, 裝備_offset, { randomX: 2, randomY: 2 })
-  await delay()
-  clickMouse()
-  await delay()
-  _moveMouseByOffset(x, y, 背包整理_offest, { randomX: 2, randomY: 2 })
-  clickMouse()
-  await delay()
-  _moveMouseByOffset(x, y, 背包向上_offest, { randomX: 2, randomY: 2 })
-  clickMouse()
+
   await delay()
 
-  // into the town, turn on map name, scale up the bag size, move bag to aline with the map name.
-  // please according the first items you want to extract define the veryFirstStart.
-  let row = paramRow // 第一個要被分解的物品的座標
+  _moveMouseByOffset(x, y, 裝備_offset, { randomX: 2, randomY: 2 })
+
+  await delay()
+
+  clickMouse()
+
+  await delay()
+
+  _moveMouseByOffset(x, y, 背包整理_offest, { randomX: 2, randomY: 2 })
+  clickMouse()
+
+  await delay()
+
+  _moveMouseByOffset(x, y, 背包向上_offest, { randomX: 2, randomY: 2 })
+  clickMouse()
+
+  await delay()
+
+  // 設定好第一個座標
+  let row = paramRow
   let column = paramColumn // 第一個要被分解的物品的座標
   const eachBlockSize = 42
   const firstCoordinate = { x: 30, y: 155 }
 
+  // 開啟分解欄位的按鈕的座標
   const extractOpenOffset = { x: 485, y: 489 }
-  const confirmOffset = { x: 730, y: 499 }
+  const confirmOffset = { x: 809, y: 510 }
 
-  let offset = _getOffsetByCoordinate(row, column)
-
+  // 開啟分解框
   _moveMouseByOffset(x, y, extractOpenOffset, { randomX: 2, randomY: 2 })
   await delay()
   clickMouse()
   await delay()
 
-  const colorPoint = { ax: x + 713, ay: y + 493, color: 'ccee00' }
+  const confirmColor = {
+    ax: x + confirmOffset.x,
+    ay: y + confirmOffset.y,
+    color: 'ddfffff',
+  }
 
-  for (let index = 1; index <= itemsCount; index++) {
+  let offset = null
+  for (let index = 1; index <= maxItems; index++) {
+    offset = _getOffsetByCoordinate(row, column)
     _moveMouseByOffset(x, y, offset, { randomX: 3, randomY: 3 })
     await delay(50)
     clickRightMouse()
     await delay(50)
 
+    // 檢查是不是不能分解的東西、會跳出一個框的那種，會自動把他按掉
     _checkHasExtraHint()
 
     const { row: nRow, column: nColumn } = _toNextRowColumn(row, column)
@@ -86,7 +106,8 @@ export async function extract(itemsCount = 65, { paramRow = 6, paramColumn = 5 }
     column = nColumn
     offset = _getOffsetByCoordinate(row, column)
 
-    if (index % 10 === 0) {
+    const maxNumberOfExtractOnce = 30
+    if (index % maxNumberOfExtractOnce === 0) {
       // 先移到空白的地方, 避免那些道具詳情影響畫面
       _moveMouseByOffset(x, y, { x: confirmOffset.x + 50, y: confirmOffset.y + 50 }, { randomX: 5, randomY: 2 })
       await delay()
@@ -95,8 +116,8 @@ export async function extract(itemsCount = 65, { paramRow = 6, paramColumn = 5 }
       await delay()
 
       // 檢查顏色
-      const currentColor = rb.getPixelColor(colorPoint.ax, colorPoint.ay)
-      if (currentColor !== colorPoint.color) {
+      const currentColor = rb.getPixelColor(confirmColor.ax - 5, confirmColor.ay - 5)
+      if (currentColor !== 'ffffff') {
         console.log('已經沒了!')
         break
       }
@@ -109,13 +130,38 @@ export async function extract(itemsCount = 65, { paramRow = 6, paramColumn = 5 }
       await waitUntil({
         x,
         y,
-        message: '分解完成',
-        maxWait: 4 * 1000,
+        message: '完成', // 這邊真的有點不準確..
+        maxWait: 10 * 1000,
         interval: 200,
         place: 'extract',
       })
 
       pressEnter()
+      await delay()
+
+      // 為了把東西全部往上放，所以要先把框關掉
+      await delay()
+      _keyIn(['escape'])
+      await delay()
+
+      // 把東西全部往上放
+      _moveMouseByOffset(x, y, 背包整理_offest, { randomX: 2, randomY: 2 })
+      await delay()
+      clickMouse()
+      await delay()
+      _moveMouseByOffset(x, y, 背包向上_offest, { randomX: 2, randomY: 2 })
+      await delay()
+      clickMouse()
+      await delay()
+
+      // 因為物品往上了，所以座標也要重新開始
+      row = paramRow
+      column = paramColumn
+
+      // 再重新把分解框叫出來
+      _moveMouseByOffset(x, y, extractOpenOffset, { randomX: 2, randomY: 2 })
+      await delay()
+      clickMouse()
       await delay()
     }
   }
