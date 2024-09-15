@@ -97,7 +97,11 @@ export async function extract({ paramRow = 6, paramColumn = 5 } = {}) {
   await delay()
 
   let offset = null
+  let everHas = false
   for (let index = 1; index <= Infinity; index++) {
+    // 用於檢查如果已經檢查過有東西在上面了，就不去做再次檢查
+    everHas = false
+
     offset = _getOffsetByCoordinate(row, column)
     _moveMouseByOffset(x, y, offset, { randomX: 3, randomY: 3 })
     await delay(50)
@@ -107,7 +111,7 @@ export async function extract({ paramRow = 6, paramColumn = 5 } = {}) {
     // 檢查是不是不能分解的東西、會跳出一個框的那種，會自動把他按掉
     _checkHasExtraHint()
 
-    if (index % 5 === 0) {
+    if (index % 5 === 0 && !everHas) {
       // 檢查是不是做了點擊的動作之後，仍舊符合關閉的條件
       // 也是要先移動去空白的地方，不然會被情詳遮到
       _moveMouseByOffset(x, y, { x: confirmOffset.x + 50, y: confirmOffset.y + 50 }, { randomX: 5, randomY: 2 })
@@ -115,6 +119,8 @@ export async function extract({ paramRow = 6, paramColumn = 5 } = {}) {
       if (rb.getPixelColor(confirmColor.ax - 5, confirmColor.ay - 5) !== 'ffffff') {
         console.log('已經沒了!')
         break
+      } else {
+        everHas = true
       }
     }
 
