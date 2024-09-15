@@ -217,7 +217,10 @@ export async function extract({ paramRow = 6, paramColumn = 5 } = {}) {
 export async function market() {
   const { x, y } = getApplicationInfo()
 
+  // 為了可以正常輸入數字，所以要先把使用者的輸入法切換到英文
   if (!(await englishMarket(x, y))) return void console.log('記得切換到英文喔')
+  pressEnter()
+  delay(50)
 
   console.log('包包容量: ', bagSize)
 
@@ -228,36 +231,30 @@ export async function market() {
 
   let boughtNumber = 0
 
-  // 買防具的部分會買到不能分解的東西，這部分還要想要怎麼跳過
-  /*
   boughtNumber = await 買防具({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 防具' })
-  await delay(2000)
-  if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
-  */
+  await delay(2000)
 
   boughtNumber = await 買武器({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 武器' })
-  await delay(2000)
-  if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
+  await delay(2000)
 
-  /*
   boughtNumber = await 買防具({ x, y, boughtNumber, price: 50000, message: '開始買 108 防具' })
-  await delay(2000)
-  if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
-  */
+  await delay(2000)
 
   boughtNumber = await 買武器({ x, y, boughtNumber, price: 50000, message: '開始買 108 武器' })
-  await delay(2000)
-  if (boughtNumber == null) return { status: MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS }
   if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
   console.log('')
+  await delay(2000)
 
   pressEnter()
+
+  await recieveItems(x, y)
+
   console.log('市場結束囉!')
 
   return { status: MARKET_NO_MORE_STATUS }
@@ -290,10 +287,7 @@ async function englishMarket(x, y) {
   return true
 }
 
-async function goToSearch(x, y) {
-  pressEnter()
-  await delay(50)
-
+export async function goToSearch(x, y) {
   for (let i = 0; i < 2; i++) {
     _moveMouseByOffset(x, y, 查詢_offset)
     await delay(50)
@@ -318,6 +312,15 @@ async function clearMarket(x, y) {
 async function 買防具({ x, y, boughtNumber, price, level, message = '開始買防具' } = {}) {
   console.log(message)
 
+  // 避免買到水晶的 nono function
+  async function nonoFn(x, y, { offset1, offset2, page = '', forIndex = '' } = {}) {
+    const nono = ['水晶', '未誰'].map((key) => new RegExp(key))
+    const text = await getTextByOffset(x, y, offset1, offset2, 'chi_tra')
+    console.log(`${page}: [${forIndex + 1}]: ${text}`)
+
+    return text === '' || nono.some((item) => text.match(new RegExp(item)))
+  }
+
   return buyByOffset({
     x,
     y,
@@ -328,6 +331,7 @@ async function 買防具({ x, y, boughtNumber, price, level, message = '開始�
     等級_offset: 防具等級_offset,
     價格_offset: 防具價格_offset,
     搜尋_offset: 防具搜尋_offset,
+    nonoFn,
     boughtNumber,
   })
 }
@@ -405,9 +409,12 @@ async function buyByOffset(config) {
     price = 40000,
     level = 108,
 
+    nonoFn = async (x, y) => !(await checkPage(x, y)),
+
     boughtNumber: preBoughtNumber = 0,
   } = config
 
+  // 點擊查詢的 tab
   await goToSearch(x, y)
 
   await setPriceAndLevel(x, y, { 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset, price, level })
@@ -423,47 +430,17 @@ async function buyByOffset(config) {
     }),
   ])
 
+  await delay()
+
+  // 沒資料的話
   if (!(await checkPage(x, y))) {
     console.log('沒有頁碼!')
     return preBoughtNumber
   }
 
-  let boughtNumber = preBoughtNumber
-  const buyRoundResult = await buyRoundRecursive()
-
+  const boughtNumber = await buyWithNoNo(x, y, { nonoFn, totalBuy: preBoughtNumber, limit: 100 })
   console.log(`總共買了 ${boughtNumber} 個!`)
-
-  if (buyRoundResult == null) return null
   return boughtNumber
-
-  async function buyRoundRecursive() {
-    await _buyRecursive()
-    const recievedSuccess = await recieveItems(x, y)
-
-    await goToSearch(x, y)
-
-    if (recievedSuccess && boughtNumber < bagSize && (await checkPage(x, y))) {
-      await buyRoundRecursive()
-    }
-
-    if (!recievedSuccess) return null
-    return true
-  }
-
-  async function _buyRecursive(previousBuy = 0) {
-    if (!(await checkPage(x, y))) return previousBuy
-
-    // 超過包包了
-    if (boughtNumber >= bagSize) return previousBuy
-
-    await buy(x, y)
-    const currentBuy = previousBuy + 1
-    boughtNumber += 1
-    console.log(`目前買了 ${boughtNumber} 個`)
-
-    if (currentBuy === 100) return currentBuy
-    return _buyRecursive(currentBuy)
-  }
 }
 
 export async function getCurrentPage(x, y) {
@@ -479,7 +456,7 @@ export async function checkPage(x, y) {
 }
 
 // TODO 當沒有東西要回收的時候要不要提早結束，目前等到 timeout 的話也不會出錯
-export async function recieveItems(x, y) {
+async function recieveItems(x, y) {
   pressEnter()
   await delay()
 
@@ -542,4 +519,59 @@ export async function buy(x, y, offset = firstItemOffset) {
 
   pressEnter()
   await delay()
+}
+
+export async function buyWithNoNo(x, y, { nonoFn = Function.prototype, totalBuy = 0, limit = 100 }) {
+  const firstItem左上offset = { x: 349, y: 220 }
+  const firstItem右下offset = { x: 448, y: 251 }
+
+  let page = null
+
+  for (let i = 0; i < 10; i++) {
+    page = await getCurrentPage(x, y)
+
+    console.log(`第 ${i + 1} 頁`)
+
+    // region check single page
+    let offset1 = firstItem左上offset
+    let offset2 = firstItem右下offset
+    for (let j = 0; j < 9; j++) {
+      // 沒 nono, 就 buybuy
+      if (!(await nonoFn(x, y, { offset1, offset2, page, forIndex: j }))) {
+        await buy(x, y, { ...offset1, y: offset1.y + 5 })
+        j-- // 卡在同一格用
+        totalBuy++
+      } else {
+        offset1 = { x: offset1.x, y: offset1.y + 55 }
+        offset2 = { x: offset2.x, y: offset2.y + 55 }
+      }
+
+      await delay()
+    }
+    // endregion check single page
+
+    // 檢查到最後一頁了沒
+    if (checkPage() != null) {
+      const [c, t] = page.split('/')
+      if (c === t) break
+    }
+    // 檢查到達最大購買數量了沒
+    if (totalBuy >= limit) {
+      console.log(`達到最大購買數量了: ${totalBuy}`)
+      break
+    }
+
+    // 還沒到，換頁後繼續
+    await goNextPage(x, y)
+    await delay()
+  }
+
+  return totalBuy
+
+  async function goNextPage(x, y) {
+    await _moveMouseByOffset(x, y, { x: 687, y: 171 }, { randomX: 1, randomY: 1 })
+    await delay()
+    await clickMouse()
+    await delay()
+  }
 }
