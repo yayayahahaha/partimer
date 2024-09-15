@@ -496,7 +496,7 @@ async function recieveItems(x, y) {
   await waitUntil({
     x,
     y,
-    message: ['已完成', '只能持有'],
+    message: ['已完成', '只能持有', '空間不足', '不足'],
     maxWait: 120 * 1000, // 這個可以改成依照買的數量做動態變動, 之前 10 個的話是 15 秒
   })
 
