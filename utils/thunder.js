@@ -730,7 +730,7 @@ export function redRobot() {
     left(2)
     right(7, false)
 
-    left(4, false)
+    left(5, false)
     goUp()
     justAttack(3)
     hop()
