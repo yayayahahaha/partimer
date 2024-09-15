@@ -240,22 +240,34 @@ export async function market() {
   let boughtNumber = 0
 
   boughtNumber = await 買防具({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 防具' })
-  if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
+  if (!checkMax(boughtNumber, bagSize)) {
+    await recieveItems(x, y)
+    return { status: MARKET_MATCH_MAX_STATYS }
+  }
   console.log('')
   await delay(2000)
 
   boughtNumber = await 買武器({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 武器' })
-  if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
+  if (!checkMax(boughtNumber, bagSize)) {
+    await recieveItems(x, y)
+    return { status: MARKET_MATCH_MAX_STATYS }
+  }
   console.log('')
   await delay(2000)
 
   boughtNumber = await 買防具({ x, y, boughtNumber, price: 50000, message: '開始買 108 防具' })
-  if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
+  if (!checkMax(boughtNumber, bagSize)) {
+    await recieveItems(x, y)
+    return { status: MARKET_MATCH_MAX_STATYS }
+  }
   console.log('')
   await delay(2000)
 
   boughtNumber = await 買武器({ x, y, boughtNumber, price: 50000, message: '開始買 108 武器' })
-  if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
+  if (!checkMax(boughtNumber, bagSize)) {
+    await recieveItems(x, y)
+    return { status: MARKET_MATCH_MAX_STATYS }
+  }
   console.log('')
   await delay(2000)
 
@@ -500,10 +512,6 @@ async function recieveItems(x, y) {
 
   return complete
 }
-
-const itemOffset = 55
-const firstItem左上offset = { x: 349, y: 225 }
-const firstItem右下offset = { x: 448, y: 251 }
 
 export async function buy(x, y, offset = firstItemOffset) {
   _moveMouseByOffset(x, y, offset)
