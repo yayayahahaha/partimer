@@ -1,6 +1,14 @@
 import { pressEnter } from './keyboard-action.js'
 import { clickMouse, clickRightMouse } from './mouse-control.js'
-import { _keyIn, _moveMouseByOffset, delay, getApplicationInfo, getTextByOffset, waitUntil } from './others.js'
+import {
+  _keyIn,
+  _moveMouseByOffset,
+  delay,
+  getApplicationInfo,
+  getTextByOffset,
+  marketAndExtract,
+  waitUntil,
+} from './others.js'
 import rb from 'robotjs'
 
 // 1366 * 768
@@ -574,4 +582,9 @@ export async function buyWithNoNo(x, y, { nonoFn = Function.prototype, totalBuy 
     await clickMouse()
     await delay()
   }
+}
+
+export async function money() {
+  const { status } = await marketAndExtract()
+  if (status !== MARKET_NO_MORE_STATUS) await money()
 }

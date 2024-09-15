@@ -710,6 +710,67 @@ export function movie() {
   }
 }
 
+export function redRobot() {
+  const createMovieList = () => [type1, type2, type3].sort(() => Math.random() - 0.5)
+
+  let fn = null
+  let fnList = createMovieList()
+  for (let i = 0; i < 100; i++) {
+    fnList = fnList.length === 0 ? createMovieList() : fnList
+
+    console.log('fnList:', fnList)
+    fn = fnList.splice(0, 1)[0]
+    fn()
+  }
+
+  function type3() {
+    right(2)
+    goDown()
+    right(4)
+    left(2)
+    right(7, false)
+
+    left(4, false)
+    goUp()
+    justAttack(3)
+    hop()
+    justAttack(2)
+    goDown()
+    justAttack(2)
+  }
+
+  function type2() {
+    right(3)
+
+    jumpFar()
+    justAttack(2)
+    goDown()
+
+    left(2)
+    hop()
+    justAttack(2)
+    hop()
+    left(3)
+  }
+
+  function type1() {
+    right(3)
+    hop()
+    right(3)
+    hop()
+    right(3)
+    hop()
+    right(2)
+
+    left(2)
+    hop()
+    left(2)
+    hop()
+    left(2)
+    hop()
+  }
+}
+
 function left(times, goBack = halfChance()) {
   return attackThrough({ direction: 'left', times, goBack })
 }
