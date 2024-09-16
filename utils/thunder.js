@@ -11,7 +11,7 @@ const buffList = [
     vkCode: 'VK_2',
     coldTime: 123 * 1000,
     priority: false,
-    previousTimestamp: Date.now() + 123,
+    previousTimestamp: Date.now(),
   },
   {
     code: '3',
@@ -130,21 +130,21 @@ const attackList = [
     vkCode: 'VK_G',
     coldTime: 9 * 1000,
     delayTime: 100,
-    previousTimestamp: Date.now() + 5000,
+    previousTimestamp: Date.now(),
   },
   {
     code: 'a',
     vkCode: 'VK_A',
     coldTime: 13 * 1000,
     delayTime: 75,
-    previousTimestamp: Date.now() + 5000,
+    previousTimestamp: Date.now(),
   },
   {
     code: 'y',
     vkCode: 'VK_Y',
     coldTime: 46 * 1000,
     delayTime: 75,
-    previousTimestamp: Date.now() + 5000,
+    previousTimestamp: Date.now(),
   },
 ]
 async function attack({ useDefault = false, afterDelay = null } = {}) {

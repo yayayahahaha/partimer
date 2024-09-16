@@ -97,11 +97,8 @@ export async function extract({ paramRow = 6, paramColumn = 5 } = {}) {
   await delay()
 
   let offset = null
-  let everHas = false
+  let everHas = false // 用於檢查如果已經檢查過有東西在上面了，就不去做再次檢查
   for (let index = 1; index <= Infinity; index++) {
-    // 用於檢查如果已經檢查過有東西在上面了，就不去做再次檢查
-    everHas = false
-
     offset = _getOffsetByCoordinate(row, column)
     _moveMouseByOffset(x, y, offset, { randomX: 3, randomY: 3 })
     await delay(50)
@@ -186,6 +183,8 @@ export async function extract({ paramRow = 6, paramColumn = 5 } = {}) {
       await delay()
       clickMouse()
       await delay()
+
+      everHas = false
     }
   }
 
@@ -544,12 +543,21 @@ export async function buy(x, y, offset = firstItemOffset) {
 }
 
 export async function buyWithNoNo(x, y, { nonoFn = Function.prototype, totalBuy = 0, limit = 100 }) {
+  await goNextPage(x, y, { justMove: true })
+
+  // 檢查到達最大購買數量了沒
+  if (totalBuy >= limit) {
+    console.log(`達到最大購買數量了: ${totalBuy}`)
+    return totalBuy
+  }
+
   const firstItem左上offset = { x: 349, y: 220 }
   const firstItem右下offset = { x: 448, y: 251 }
 
   let page = null
+  let previousPage = null
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 20; i++) {
     page = await getCurrentPage(x, y)
 
     console.log(`第 ${i + 1} 頁`)
@@ -560,22 +568,31 @@ export async function buyWithNoNo(x, y, { nonoFn = Function.prototype, totalBuy 
     for (let j = 0; j < 9; j++) {
       // 沒 nono, 就 buybuy
       if (!(await nonoFn(x, y, { offset1, offset2, page, forIndex: j }))) {
-        await buy(x, y, { ...offset1, y: offset1.y + 5 })
+        await buy(x, y, { ...offset1, y: offset1.y + 5 }) // TODO(flyc): 購買欄位不夠的時候要跳出去
         j-- // 卡在同一格用
         totalBuy++
+        console.log(`目前買了 ${totalBuy} 個`)
       } else {
         offset1 = { x: offset1.x, y: offset1.y + 55 }
         offset2 = { x: offset2.x, y: offset2.y + 55 }
       }
-
-      await delay()
     }
     // endregion check single page
 
     // 檢查到最後一頁了沒
     if (checkPage() != null) {
+      // 先用 / 的方式判斷
       const [c, t] = page.split('/')
       if (c === t) break
+
+      // 不行的話用回歸判斷
+      const reverse = page.split('').reverse().join('')
+      if (page === reverse) break
+
+      // 最後就用與之前相同與否的方式判斷吧
+      if (page === previousPage) break
+
+      previousPage = page
     }
     // 檢查到達最大購買數量了沒
     if (totalBuy >= limit) {
@@ -590,9 +607,12 @@ export async function buyWithNoNo(x, y, { nonoFn = Function.prototype, totalBuy 
 
   return totalBuy
 
-  async function goNextPage(x, y) {
-    await _moveMouseByOffset(x, y, { x: 687, y: 171 }, { randomX: 1, randomY: 1 })
+  async function goNextPage(x, y, { justMove = false } = {}) {
+    _moveMouseByOffset(x, y, { x: 687, y: 171 }, { randomX: 1, randomY: 1 })
     await delay()
+
+    if (justMove) return
+
     await clickMouse()
     await delay()
   }
