@@ -346,6 +346,15 @@ async function 買防具({ x, y, boughtNumber, price, level, message = '開始�
     return text === '' || nono.some((item) => text.match(new RegExp(item)))
   }
 
+  async function justNextPage() {
+    const bigOffset1 = { x: 340, y: 220 }
+    const bigOffset2 = { x: 475, y: 700 }
+
+    const text = await getTextByOffset(x, y, bigOffset1, bigOffset2, 'chi_tra')
+    const 水晶count = text.match(/水晶/g).length
+    return 水晶count === 9
+  }
+
   return buyByOffset({
     x,
     y,
@@ -356,6 +365,7 @@ async function 買防具({ x, y, boughtNumber, price, level, message = '開始�
     等級_offset: 防具等級_offset,
     價格_offset: 防具價格_offset,
     搜尋_offset: 防具搜尋_offset,
+    justNextPage,
     nonoFn,
     boughtNumber,
   })
@@ -434,6 +444,7 @@ async function buyByOffset(config) {
     price = 40000,
     level = 108,
 
+    justNextPage = () => false,
     nonoFn = async (x, y) => !(await checkPage(x, y)),
 
     boughtNumber: preBoughtNumber = 0,
@@ -463,7 +474,7 @@ async function buyByOffset(config) {
     return preBoughtNumber
   }
 
-  const boughtNumber = await buyWithNoNo(x, y, { nonoFn, totalBuy: preBoughtNumber, limit: 100 })
+  const boughtNumber = await buyWithNoNo(x, y, { nonoFn, justNextPage, totalBuy: preBoughtNumber, limit: 100 })
   console.log(`總共買了 ${boughtNumber} 個!`)
   return boughtNumber
 }
@@ -542,7 +553,11 @@ export async function buy(x, y, offset = firstItemOffset) {
   await delay()
 }
 
-export async function buyWithNoNo(x, y, { nonoFn = Function.prototype, totalBuy = 0, limit = 100 }) {
+export async function buyWithNoNo(
+  x,
+  y,
+  { nonoFn = Function.prototype, justNextPage = () => false, totalBuy = 0, limit = 100 }
+) {
   await goNextPage(x, y, { justMove: true })
 
   // 檢查到達最大購買數量了沒
@@ -562,22 +577,26 @@ export async function buyWithNoNo(x, y, { nonoFn = Function.prototype, totalBuy 
 
     console.log(`第 ${i + 1} 頁`)
 
-    // region check single page
-    let offset1 = firstItem左上offset
-    let offset2 = firstItem右下offset
-    for (let j = 0; j < 9; j++) {
-      // 沒 nono, 就 buybuy
-      if (!(await nonoFn(x, y, { offset1, offset2, page, forIndex: j }))) {
-        await buy(x, y, { ...offset1, y: offset1.y + 5 }) // TODO(flyc): 購買欄位不夠的時候要跳出去
-        j-- // 卡在同一格用
-        totalBuy++
-        console.log(`目前買了 ${totalBuy} 個`)
-      } else {
-        offset1 = { x: offset1.x, y: offset1.y + 55 }
-        offset2 = { x: offset2.x, y: offset2.y + 55 }
+    if (await justNextPage(x, y)) {
+      console.log('達成條件! 可以直接跳下一頁面')
+    } else {
+      // region check single page
+      let offset1 = firstItem左上offset
+      let offset2 = firstItem右下offset
+      for (let j = 0; j < 9; j++) {
+        // 沒 nono, 就 buybuy
+        if (!(await nonoFn(x, y, { offset1, offset2, page, forIndex: j }))) {
+          await buy(x, y, { ...offset1, y: offset1.y + 5 }) // TODO(flyc): 購買欄位不夠的時候要跳出去
+          j-- // 卡在同一格用
+          totalBuy++
+          console.log(`目前買了 ${totalBuy} 個`)
+        } else {
+          offset1 = { x: offset1.x, y: offset1.y + 55 }
+          offset2 = { x: offset2.x, y: offset2.y + 55 }
+        }
       }
+      // endregion check single page
     }
-    // endregion check single page
 
     // 檢查到最後一頁了沒
     if (checkPage() != null) {
@@ -591,8 +610,6 @@ export async function buyWithNoNo(x, y, { nonoFn = Function.prototype, totalBuy 
 
       // 最後就用與之前相同與否的方式判斷吧
       if (page === previousPage) break
-
-      previousPage = page
     }
     // 檢查到達最大購買數量了沒
     if (totalBuy >= limit) {
@@ -601,6 +618,7 @@ export async function buyWithNoNo(x, y, { nonoFn = Function.prototype, totalBuy 
     }
 
     // 還沒到，換頁後繼續
+    previousPage = page
     await goNextPage(x, y)
     await delay()
   }
