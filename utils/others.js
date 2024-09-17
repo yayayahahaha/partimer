@@ -39,13 +39,13 @@ const 市場搜尋右下_offset = { x: 250, y: 96 }
 export async function marketAndExtract() {
   const { x, y } = getApplicationInfo()
 
-  const townName = await waitUntil({ x, y, maxWait: 6 * 1000, message: '梅斯特', place: 'town' })
+  const townName = await waitUntil({ x, y, maxWait: 10 * 1000, message: '梅斯特', place: 'town' })
   if (townName == null) return void console.log('要先到鎮上喔')
 
   _keyIn([']', ...Array(4).fill('down')])
   pressEnter()
 
-  const inMarket = await waitUntil({ x, y, message: '楓之谷拍賣', place: 'market-title' })
+  const inMarket = await waitUntil({ x, y, maxWait: 10 * 1000, message: '楓之谷拍賣', place: 'market-title' })
   if (inMarket == null) return void console.log('到不了市場。。。')
 
   const marketResult = await market()
