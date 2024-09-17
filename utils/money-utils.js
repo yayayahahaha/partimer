@@ -351,7 +351,7 @@ async function 買防具({ x, y, boughtNumber, price, level, message = '開始�
     const bigOffset2 = { x: 475, y: 700 }
 
     const text = await getTextByOffset(x, y, bigOffset1, bigOffset2, 'chi_tra')
-    const 水晶count = text.match(/水晶/g).length
+    const 水晶count = text.match(/水晶/g)?.length || 0
     return 水晶count === 9
   }
 

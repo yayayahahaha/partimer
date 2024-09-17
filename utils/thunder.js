@@ -94,6 +94,7 @@ function buffStuff(test = false) {
     .sort((a) => (a.priority ? -1 : 1))
 
   test && console.log('buff list: ', JSON.stringify(list.map((item) => item.code)))
+
   for (let i = 0; i < list.length; i++) {
     const buff = list[i]
     if (buff.previousTimestamp + buff.coldTime < current) {
