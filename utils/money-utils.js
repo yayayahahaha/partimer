@@ -242,34 +242,44 @@ export async function market() {
   // 清空畫面，不然會買到其他東西。。。
   await clearMarket(x, y)
 
+  let res = null
+  let status = null
   let boughtNumber = 0
 
-  boughtNumber = await 買防具({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 防具' })
-  if (!checkMax(boughtNumber, bagSize)) {
+  res = await 買防具({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 防具' })
+  boughtNumber = res.boughtNumber
+  status = res.status
+  if (status !== '買完了' || !checkMax(boughtNumber, bagSize)) {
     await recieveItems(x, y)
     return { status: MARKET_MATCH_MAX_STATYS }
   }
   console.log('')
   await delay(2000)
 
-  boughtNumber = await 買武器({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 武器' })
-  if (!checkMax(boughtNumber, bagSize)) {
+  res = await 買武器({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 武器' })
+  boughtNumber = res.boughtNumber
+  status = res.status
+  if (status !== '買完了' || !checkMax(boughtNumber, bagSize)) {
     await recieveItems(x, y)
     return { status: MARKET_MATCH_MAX_STATYS }
   }
   console.log('')
   await delay(2000)
 
-  boughtNumber = await 買防具({ x, y, boughtNumber, price: 50000, message: '開始買 108 防具' })
-  if (!checkMax(boughtNumber, bagSize)) {
+  res = await 買防具({ x, y, boughtNumber, price: 50000, message: '開始買 108 防具' })
+  boughtNumber = res.boughtNumber
+  status = res.status
+  if (status !== '買完了' || !checkMax(boughtNumber, bagSize)) {
     await recieveItems(x, y)
     return { status: MARKET_MATCH_MAX_STATYS }
   }
   console.log('')
   await delay(2000)
 
-  boughtNumber = await 買武器({ x, y, boughtNumber, price: 50000, message: '開始買 108 武器' })
-  if (!checkMax(boughtNumber, bagSize)) {
+  res = await 買武器({ x, y, boughtNumber, price: 50000, message: '開始買 108 武器' })
+  boughtNumber = res.boughtNumber
+  status = res.status
+  if (status !== '買完了' || !checkMax(boughtNumber, bagSize)) {
     await recieveItems(x, y)
     return { status: MARKET_MATCH_MAX_STATYS }
   }
@@ -474,9 +484,14 @@ async function buyByOffset(config) {
     return preBoughtNumber
   }
 
-  const boughtNumber = await buyWithNoNo(x, y, { nonoFn, justNextPage, totalBuy: preBoughtNumber, limit: 100 })
+  const { totalBuy: boughtNumber, status } = await buyWithNoNo(x, y, {
+    nonoFn,
+    justNextPage,
+    totalBuy: preBoughtNumber,
+    limit: 100,
+  })
   console.log(`總共買了 ${boughtNumber} 個!`)
-  return boughtNumber
+  return { boughtNumber, status }
 }
 
 export async function getCurrentPage(x, y) {
@@ -549,8 +564,18 @@ export async function buy(x, y, offset = firstItemOffset) {
     maxWait: 10 * 1000,
   })
 
+  // 先用這種方式吧
+  const isNotEnough = await waitUntil({
+    x,
+    y,
+    message: ['不足'], // TODO 這個要加上 "是哪個符合到了" 的功能，畢竟要做的事情不一樣
+    maxWait: 500,
+  })
+
   pressEnter()
   await delay()
+
+  return !isNotEnough
 }
 
 export async function buyWithNoNo(
@@ -563,7 +588,7 @@ export async function buyWithNoNo(
   // 檢查到達最大購買數量了沒
   if (totalBuy >= limit) {
     console.log(`達到最大購買數量了: ${totalBuy}`)
-    return totalBuy
+    return { totalBuy, status: '達到最大購買數量' }
   }
 
   const firstItem左上offset = { x: 349, y: 220 }
@@ -583,10 +608,16 @@ export async function buyWithNoNo(
       // region check single page
       let offset1 = firstItem左上offset
       let offset2 = firstItem右下offset
+
       for (let j = 0; j < 9; j++) {
         // 沒 nono, 就 buybuy
         if (!(await nonoFn(x, y, { offset1, offset2, page, forIndex: j }))) {
-          await buy(x, y, { ...offset1, y: offset1.y + 5 }) // TODO(flyc): 購買欄位不夠的時候要跳出去
+          const isEnough = await buy(x, y, { ...offset1, y: offset1.y + 5 })
+          if (!isEnough) {
+            console.log('購買空間不夠了')
+            return { totalBuy, status: '購買空間不夠了' }
+          }
+
           j-- // 卡在同一格用
           totalBuy++
           console.log(`目前買了 ${totalBuy} 個`)
@@ -623,7 +654,7 @@ export async function buyWithNoNo(
     await delay()
   }
 
-  return totalBuy
+  return { totalBuy, status: '買完了' }
 
   async function goNextPage(x, y, { justMove = false } = {}) {
     _moveMouseByOffset(x, y, { x: 687, y: 171 }, { randomX: 1, randomY: 1 })
@@ -631,7 +662,7 @@ export async function buyWithNoNo(
 
     if (justMove) return
 
-    await clickMouse()
+    clickMouse()
     await delay()
   }
 }
