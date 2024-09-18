@@ -288,7 +288,7 @@ export async function market() {
 
   pressEnter()
 
-  await recieveItems(x, y)
+  await recieveItems(x, y, boughtNumber)
 
   console.log('市場結束囉!')
 
@@ -507,7 +507,12 @@ export async function checkPage(x, y) {
 }
 
 // TODO 當沒有東西要回收的時候要不要提早結束，目前等到 timeout 的話也不會出錯
-async function recieveItems(x, y) {
+async function recieveItems(x, y, totalBuy) {
+  if (totalBuy === 0) {
+    console.log('沒有買東西，所以不用領取')
+    return
+  }
+
   pressEnter()
   await delay()
 
@@ -531,7 +536,7 @@ async function recieveItems(x, y) {
     maxWait: 120 * 1000, // 這個可以改成依照買的數量做動態變動, 之前 10 個的話是 15 秒
   })
 
-  const complete = await waitUntil({
+  await waitUntil({
     x,
     y,
     message: '已完成',
@@ -540,8 +545,6 @@ async function recieveItems(x, y) {
 
   pressEnter()
   await delay()
-
-  return complete
 }
 
 export async function buy(x, y, offset = firstItemOffset) {
@@ -557,25 +560,20 @@ export async function buy(x, y, offset = firstItemOffset) {
   await delay()
 
   pressEnter()
-  await waitUntil({
-    x,
-    y,
-    message: ['成功', '不足', '不存在'], // TODO 這個要加上 "是哪個符合到了" 的功能，畢竟要做的事情不一樣
-    maxWait: 10 * 1000,
-  })
-
-  // 先用這種方式吧
-  const isNotEnough = await waitUntil({
-    x,
-    y,
-    message: ['不足'], // TODO 這個要加上 "是哪個符合到了" 的功能，畢竟要做的事情不一樣
-    maxWait: 500,
-  })
+  const { index: foundIndex } =
+    (await waitUntil({
+      x,
+      y,
+      message: ['成功', '不足', '不存在'], // TODO 這個要加上 "是哪個符合到了" 的功能，畢竟要做的事情不一樣
+      maxWait: 10 * 1000,
+    })) || {}
+  const isNotEnough = foundIndex === 1 // '不足' 的 index
+  const notExist = foundIndex === 2
 
   pressEnter()
   await delay()
 
-  return !isNotEnough
+  return isNotEnough ? { status: '不足' } : notExist ? { status: '不存在' } : { status: '成功' }
 }
 
 export async function buyWithNoNo(
@@ -612,10 +610,13 @@ export async function buyWithNoNo(
       for (let j = 0; j < 9; j++) {
         // 沒 nono, 就 buybuy
         if (!(await nonoFn(x, y, { offset1, offset2, page, forIndex: j }))) {
-          const isEnough = await buy(x, y, { ...offset1, y: offset1.y + 5 })
-          if (!isEnough) {
+          const { status } = await buy(x, y, { ...offset1, y: offset1.y + 5 })
+          if (status === '不足') {
             console.log('購買空間不夠了')
             return { totalBuy, status: '購買空間不夠了' }
+          } else if (status === '不存在') {
+            console.log('剛剛要買的東西沒買到，不見惹')
+            totalBuy-- // 後面怎樣都會++, 所以這邊先--
           }
 
           j-- // 卡在同一格用

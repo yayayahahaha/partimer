@@ -194,7 +194,7 @@ export async function waitUntil({
           }
         })
 
-        let result = false
+        let result = -1
         for (let i = 0; i < fList.length; i++) {
           const { fn, message } = fList[i]
           const imgText = await fn(x, y)
@@ -204,11 +204,11 @@ export async function waitUntil({
 
           if (!Array.isArray(messageList)) messageList = [messageList]
 
-          result = result || messageList.some((str) => imgText.match(new RegExp(str)))
-          if (result) break
+          result = messageList.findIndex((str) => imgText.match(new RegExp(str)))
+          if (~result) break
         }
-        if (result) {
-          resolve(true)
+        if (~result) {
+          resolve({ index: result })
 
           // 避免 nodejs 卡住
           return void setTimeout(delayResolve, 100)
