@@ -253,6 +253,7 @@ export async function market() {
     await recieveItems(x, y)
     return { status: MARKET_MATCH_MAX_STATYS }
   }
+  console.log('因為怕沒買到東西導致太快結束，所以要先等個 2 秒')
   console.log('')
   await delay(2000)
 
@@ -263,6 +264,7 @@ export async function market() {
     await recieveItems(x, y)
     return { status: MARKET_MATCH_MAX_STATYS }
   }
+  console.log('因為怕沒買到東西導致太快結束，所以要先等個 2 秒')
   console.log('')
   await delay(2000)
 
@@ -273,6 +275,7 @@ export async function market() {
     await recieveItems(x, y)
     return { status: MARKET_MATCH_MAX_STATYS }
   }
+  console.log('因為怕沒買到東西導致太快結束，所以要先等個 2 秒')
   console.log('')
   await delay(2000)
 
@@ -283,6 +286,7 @@ export async function market() {
     await recieveItems(x, y)
     return { status: MARKET_MATCH_MAX_STATYS }
   }
+  console.log('因為怕沒買到東西導致太快結束，所以要先等個 2 秒')
   console.log('')
   await delay(2000)
 
@@ -573,7 +577,13 @@ export async function buy(x, y, offset = firstItemOffset) {
   pressEnter()
   await delay()
 
-  return isNotEnough ? { status: '不足' } : notExist ? { status: '不存在' } : { status: '成功' }
+  return isNotEnough
+    ? { status: '不足' }
+    : notExist
+    ? { status: '不存在' }
+    : foundIndex == null
+    ? { status: '等待超時' }
+    : { status: '成功' }
 }
 
 export async function buyWithNoNo(
@@ -611,12 +621,19 @@ export async function buyWithNoNo(
         // 沒 nono, 就 buybuy
         if (!(await nonoFn(x, y, { offset1, offset2, page, forIndex: j }))) {
           const { status } = await buy(x, y, { ...offset1, y: offset1.y + 5 })
-          if (status === '不足') {
-            console.log('購買空間不夠了')
-            return { totalBuy, status: '購買空間不夠了' }
-          } else if (status === '不存在') {
-            console.log('剛剛要買的東西沒買到，不見惹')
-            totalBuy-- // 後面怎樣都會++, 所以這邊先--
+          switch (status) {
+            case '不足':
+              console.log('購買空間不夠了')
+              return { totalBuy, status: '購買空間不夠了' }
+
+            case '不存在':
+              console.log('剛剛要買的東西沒買到，不見惹')
+              totalBuy-- // 後面怎樣都會++, 所以這邊先--
+              break
+
+            case '等待超時':
+              console.log('購買的等待超時了，我也不知道該怎麼辦其實, 後面應該會買成功.. 吧')
+              break
           }
 
           j-- // 卡在同一格用
