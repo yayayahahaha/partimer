@@ -712,7 +712,8 @@ export function movie() {
 }
 
 export function redRobot() {
-  const createMovieList = () => [type1, type2, type3].sort(() => Math.random() - 0.5)
+  // const createMovieList = () => [type1, type2, type3].sort(() => Math.random() - 0.5)
+  const createMovieList = () => [type4].sort(() => Math.random() - 0.5)
 
   let fn = null
   let fnList = createMovieList()
@@ -722,6 +723,24 @@ export function redRobot() {
     console.log('fnList:', fnList)
     fn = fnList.splice(0, 1)[0]
     fn()
+  }
+
+  function type4() {
+    right(2, false)
+    hop()
+    justAttack(2)
+    hop()
+    justAttack(2)
+    hop()
+    justAttack(2)
+
+    left(2, false)
+    hop()
+    justAttack(2)
+    hop()
+    justAttack(2)
+    hop()
+    justAttack(2)
   }
 
   function type3() {
@@ -737,7 +756,8 @@ export function redRobot() {
     hop()
     justAttack(2)
     goDown()
-    justAttack(2)
+    right(3)
+    left(2)
   }
 
   function type2() {
@@ -769,6 +789,7 @@ export function redRobot() {
     hop()
     left(2)
     hop()
+    justAttack(3)
   }
 }
 

@@ -485,7 +485,7 @@ async function buyByOffset(config) {
   // 沒資料的話
   if (!(await checkPage(x, y))) {
     console.log('沒有頁碼!')
-    return preBoughtNumber
+    return { boughtNumber: preBoughtNumber, status: '買完了' }
   }
 
   const { totalBuy: boughtNumber, status } = await buyWithNoNo(x, y, {
