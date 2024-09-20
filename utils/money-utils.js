@@ -360,6 +360,7 @@ async function 買防具({ x, y, boughtNumber, price, level, message = '開始�
     return text === '' || nono.some((item) => text.match(new RegExp(item)))
   }
 
+  // 檢查如果整頁都是水晶的話就直接跳頁
   async function justNextPage() {
     const bigOffset1 = { x: 340, y: 220 }
     const bigOffset2 = { x: 475, y: 700 }
@@ -467,7 +468,14 @@ async function buyByOffset(config) {
   // 點擊查詢的 tab
   await goToSearch(x, y)
 
+  // 設定查詢的資訊 + 開始查詢
   await setPriceAndLevel(x, y, { 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset, price, level })
+
+  // 稍微等待一瞬間，讓畫面出現 「正在搜尋中」的框
+  await delay()
+
+  // 等「正在搜尋中」消失
+  await waitUntil({ x, y, message: '正在', maxWait: 5 * 1000, place: ['center'], waitDissapear: true })
 
   // 等待查詢結果
   await Promise.race([

@@ -135,6 +135,7 @@ export async function waitUntil({
   maxWait = 5000,
   interval = 100,
   place = 'center',
+  waitDissapear = false,
   test = false,
 } = {}) {
   let stopTry = false
@@ -205,7 +206,12 @@ export async function waitUntil({
           if (!Array.isArray(messageList)) messageList = [messageList]
 
           result = messageList.findIndex((str) => imgText.match(new RegExp(str)))
-          if (~result) break
+          const found = !!~result
+          if (waitDissapear) {
+            if (!found) break
+          } else {
+            if (found) break
+          }
         }
         if (~result) {
           resolve({ index: result })
