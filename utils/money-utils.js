@@ -471,11 +471,15 @@ async function buyByOffset(config) {
   // 設定查詢的資訊 + 開始查詢
   await setPriceAndLevel(x, y, { 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset, price, level })
 
-  // 稍微等待一瞬間，讓畫面出現 「正在搜尋中」的框
-  await delay()
-
-  // 等「正在搜尋中」消失
-  await waitUntil({ x, y, message: '正在', maxWait: 5 * 1000, place: ['center'], waitDissapear: true })
+  // 等「正在搜尋中」出現，如果有的話等他消失
+  console.log('等「正在搜尋中」出現，如果有的話等他消失')
+  const has正在搜尋中 = await waitUntil({ x, y, message: '正在', maxWait: 3 * 1000, place: ['center'] })
+  if (has正在搜尋中 != null) {
+    console.log('有出現「正在搜尋中」，等他消失')
+    await waitUntil({ x, y, message: '正在', maxWait: 60 * 1000, place: ['center'], waitDissapear: true })
+  } else {
+    console.log('沒有出現「正在搜尋中」')
+  }
 
   // 等待查詢結果
   await Promise.race([
