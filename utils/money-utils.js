@@ -12,7 +12,6 @@ import {
 import rb from 'robotjs'
 
 // 1366 * 768
-const bagSize = 65
 // 城鎮
 const 裝備_offset = { x: 30, y: 124 }
 const 背包整理_offest = { x: 172, y: 486 }
@@ -41,9 +40,8 @@ const 頁碼右下_offset = { x: 668, y: 176 }
 const extractOpenOffset = { x: 485, y: 489 }
 const confirmOffset = { x: 809, y: 510 }
 
-const MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS = 'has-item-which-can-only-have-one-status'
 const MARKET_MATCH_MAX_STATYS = 'match-max-status'
-export const MARKET_NO_MORE_STATUS = 'no-more-status'
+const MARKET_NO_MORE_STATUS = 'no-more-status'
 
 // 進入城鎮
 // 讓右上角的小地圖包含地圖名稱一起顯示
@@ -97,6 +95,7 @@ export async function extract({ paramRow = 6, paramColumn = 5 } = {}) {
   await delay()
 
   let offset = null
+  let everHas = false // 用於檢查如果已經檢查過有東西在上面了，就不去做再次檢查
   for (let index = 1; index <= Infinity; index++) {
     offset = _getOffsetByCoordinate(row, column)
     _moveMouseByOffset(x, y, offset, { randomX: 3, randomY: 3 })
@@ -107,7 +106,7 @@ export async function extract({ paramRow = 6, paramColumn = 5 } = {}) {
     // 檢查是不是不能分解的東西、會跳出一個框的那種，會自動把他按掉
     _checkHasExtraHint()
 
-    if (index % 5 === 0) {
+    if (index % 5 === 0 && !everHas) {
       // 檢查是不是做了點擊的動作之後，仍舊符合關閉的條件
       // 也是要先移動去空白的地方，不然會被情詳遮到
       _moveMouseByOffset(x, y, { x: confirmOffset.x + 50, y: confirmOffset.y + 50 }, { randomX: 5, randomY: 2 })
@@ -115,6 +114,8 @@ export async function extract({ paramRow = 6, paramColumn = 5 } = {}) {
       if (rb.getPixelColor(confirmColor.ax - 5, confirmColor.ay - 5) !== 'ffffff') {
         console.log('已經沒了!')
         break
+      } else {
+        everHas = true
       }
     }
 
@@ -180,6 +181,8 @@ export async function extract({ paramRow = 6, paramColumn = 5 } = {}) {
       await delay()
       clickMouse()
       await delay()
+
+      everHas = false
     }
   }
 
@@ -230,38 +233,62 @@ export async function market() {
   pressEnter()
   delay(50)
 
-  console.log('包包容量: ', bagSize)
-
   await goToSearch(x, y)
 
   // 清空畫面，不然會買到其他東西。。。
   await clearMarket(x, y)
 
+  let res = null
+  let status = null
   let boughtNumber = 0
 
-  boughtNumber = await 買防具({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 防具' })
-  if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
+  res = await 買防具({ x, y, boughtNumber, price: 100000, level: 130, message: '開始買 130 防具' })
+  boughtNumber = res.boughtNumber
+  status = res.status
+  if (status === '購買空間不夠了') {
+    await recieveItems(x, y)
+    return { status: MARKET_MATCH_MAX_STATYS }
+  }
+  console.log('因為怕沒買到東西導致太快結束，所以要先等個 2 秒')
   console.log('')
   await delay(2000)
 
-  boughtNumber = await 買武器({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 武器' })
-  if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
+  res = await 買武器({ x, y, boughtNumber, price: 100000, level: 130, message: '開始買 130 武器' })
+  boughtNumber = res.boughtNumber
+  status = res.status
+  if (status === '購買空間不夠了') {
+    await recieveItems(x, y)
+    return { status: MARKET_MATCH_MAX_STATYS }
+  }
+  console.log('因為怕沒買到東西導致太快結束，所以要先等個 2 秒')
   console.log('')
   await delay(2000)
 
-  boughtNumber = await 買防具({ x, y, boughtNumber, price: 50000, message: '開始買 108 防具' })
-  if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
+  res = await 買防具({ x, y, boughtNumber, price: 70000, message: '開始買 108 防具' })
+  boughtNumber = res.boughtNumber
+  status = res.status
+  if (status === '購買空間不夠了') {
+    await recieveItems(x, y)
+    return { status: MARKET_MATCH_MAX_STATYS }
+  }
+  console.log('因為怕沒買到東西導致太快結束，所以要先等個 2 秒')
   console.log('')
   await delay(2000)
 
-  boughtNumber = await 買武器({ x, y, boughtNumber, price: 50000, message: '開始買 108 武器' })
-  if (!checkMax(boughtNumber, bagSize)) return { status: MARKET_MATCH_MAX_STATYS }
+  res = await 買武器({ x, y, boughtNumber, price: 70000, message: '開始買 108 武器' })
+  boughtNumber = res.boughtNumber
+  status = res.status
+  if (status === '購買空間不夠了') {
+    await recieveItems(x, y)
+    return { status: MARKET_MATCH_MAX_STATYS }
+  }
+  console.log('因為怕沒買到東西導致太快結束，所以要先等個 2 秒')
   console.log('')
   await delay(2000)
 
   pressEnter()
 
-  await recieveItems(x, y)
+  await recieveItems(x, y, boughtNumber)
 
   console.log('市場結束囉!')
 
@@ -329,6 +356,16 @@ async function 買防具({ x, y, boughtNumber, price, level, message = '開始�
     return text === '' || nono.some((item) => text.match(new RegExp(item)))
   }
 
+  // 檢查如果整頁都是水晶的話就直接跳頁
+  async function justNextPage() {
+    const bigOffset1 = { x: 340, y: 220 }
+    const bigOffset2 = { x: 475, y: 700 }
+
+    const text = await getTextByOffset(x, y, bigOffset1, bigOffset2, 'chi_tra')
+    const 水晶count = text.match(/水晶/g)?.length || 0
+    return 水晶count === 9
+  }
+
   return buyByOffset({
     x,
     y,
@@ -339,6 +376,7 @@ async function 買防具({ x, y, boughtNumber, price, level, message = '開始�
     等級_offset: 防具等級_offset,
     價格_offset: 防具價格_offset,
     搜尋_offset: 防具搜尋_offset,
+    justNextPage,
     nonoFn,
     boughtNumber,
   })
@@ -358,16 +396,6 @@ async function 買武器({ x, y, boughtNumber, price, level, message = '開始�
     搜尋_offset: 武器搜尋_offset,
     boughtNumber,
   })
-}
-
-function checkMax(boughtNumber, bagSize) {
-  if (boughtNumber >= bagSize) {
-    console.log('達到上限了!')
-    console.log(`這次買了 ${boughtNumber} 個`)
-    return false
-  }
-
-  return true
 }
 
 async function setPriceAndLevel(x, y, config) {
@@ -417,6 +445,7 @@ async function buyByOffset(config) {
     price = 40000,
     level = 108,
 
+    justNextPage = () => false,
     nonoFn = async (x, y) => !(await checkPage(x, y)),
 
     boughtNumber: preBoughtNumber = 0,
@@ -425,7 +454,18 @@ async function buyByOffset(config) {
   // 點擊查詢的 tab
   await goToSearch(x, y)
 
+  // 設定查詢的資訊 + 開始查詢
   await setPriceAndLevel(x, y, { 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset, price, level })
+
+  // 等「正在搜尋中」出現，如果有的話等他消失
+  console.log('等「正在搜尋中」出現，如果有的話等他消失')
+  const has正在搜尋中 = await waitUntil({ x, y, message: '正在', maxWait: 3 * 1000, place: ['center'] })
+  if (has正在搜尋中 != null) {
+    console.log('有出現「正在搜尋中」，等他消失')
+    await waitUntil({ x, y, message: '正在', maxWait: 60 * 1000, place: ['center'], waitDissapear: true })
+  } else {
+    console.log('沒有出現「正在搜尋中」')
+  }
 
   // 等待查詢結果
   await Promise.race([
@@ -443,12 +483,16 @@ async function buyByOffset(config) {
   // 沒資料的話
   if (!(await checkPage(x, y))) {
     console.log('沒有頁碼!')
-    return preBoughtNumber
+    return { boughtNumber: preBoughtNumber, status: '當前類別沒有東西了' }
   }
 
-  const boughtNumber = await buyWithNoNo(x, y, { nonoFn, totalBuy: preBoughtNumber, limit: 100 })
+  const { totalBuy: boughtNumber, status } = await buyWithNoNo(x, y, {
+    nonoFn,
+    justNextPage,
+    totalBuy: preBoughtNumber,
+  })
   console.log(`總共買了 ${boughtNumber} 個!`)
-  return boughtNumber
+  return { boughtNumber, status }
 }
 
 export async function getCurrentPage(x, y) {
@@ -463,8 +507,14 @@ export async function checkPage(x, y) {
   return true
 }
 
-// TODO 當沒有東西要回收的時候要不要提早結束，目前等到 timeout 的話也不會出錯
-async function recieveItems(x, y) {
+// TODO(flyc): 有時候會出現明明東西還沒有領取完，但卻自己停止的情況
+// 這種情況要再按一次領取: 判斷畫面上的東西消失的時候有沒有出現完成之類的吧
+async function recieveItems(x, y, totalBuy) {
+  if (totalBuy === 0) {
+    console.log('沒有買東西，所以不用領取')
+    return
+  }
+
   pressEnter()
   await delay()
 
@@ -484,11 +534,11 @@ async function recieveItems(x, y) {
   await waitUntil({
     x,
     y,
-    message: ['已完成', '只能持有'],
+    message: ['已完成', '只能持有', '空間不足', '不足'],
     maxWait: 120 * 1000, // 這個可以改成依照買的數量做動態變動, 之前 10 個的話是 15 秒
   })
 
-  const complete = await waitUntil({
+  await waitUntil({
     x,
     y,
     message: '已完成',
@@ -497,13 +547,7 @@ async function recieveItems(x, y) {
 
   pressEnter()
   await delay()
-
-  return complete
 }
-
-const itemOffset = 55
-const firstItem左上offset = { x: 349, y: 225 }
-const firstItem右下offset = { x: 448, y: 251 }
 
 export async function buy(x, y, offset = firstItemOffset) {
   _moveMouseByOffset(x, y, offset)
@@ -518,68 +562,112 @@ export async function buy(x, y, offset = firstItemOffset) {
   await delay()
 
   pressEnter()
-  await waitUntil({
-    x,
-    y,
-    message: ['成功', '不足', '不存在'], // TODO 這個要加上 "是哪個符合到了" 的功能，畢竟要做的事情不一樣
-    maxWait: 10 * 1000,
-  })
+  const { index: foundIndex } =
+    (await waitUntil({
+      x,
+      y,
+      message: ['成功', '不足', '不存在'], // TODO 這個要加上 "是哪個符合到了" 的功能，畢竟要做的事情不一樣
+      maxWait: 10 * 1000,
+    })) || {}
+  const isNotEnough = foundIndex === 1 // '不足' 的 index
+  const notExist = foundIndex === 2
 
   pressEnter()
   await delay()
+
+  return isNotEnough
+    ? { status: '不足' }
+    : notExist
+    ? { status: '不存在' }
+    : foundIndex == null
+    ? { status: '等待超時' }
+    : { status: '成功' }
 }
 
-export async function buyWithNoNo(x, y, { nonoFn = Function.prototype, totalBuy = 0, limit = 100 }) {
+export async function buyWithNoNo(
+  x,
+  y,
+  { nonoFn = Function.prototype, justNextPage = () => Promise.resolve(), totalBuy = 0 }
+) {
+  await goNextPage(x, y, { justMove: true })
+
   const firstItem左上offset = { x: 349, y: 220 }
   const firstItem右下offset = { x: 448, y: 251 }
 
   let page = null
+  let previousPage = null
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 20; i++) {
     page = await getCurrentPage(x, y)
 
     console.log(`第 ${i + 1} 頁`)
 
-    // region check single page
-    let offset1 = firstItem左上offset
-    let offset2 = firstItem右下offset
-    for (let j = 0; j < 9; j++) {
-      // 沒 nono, 就 buybuy
-      if (!(await nonoFn(x, y, { offset1, offset2, page, forIndex: j }))) {
-        await buy(x, y, { ...offset1, y: offset1.y + 5 })
-        j-- // 卡在同一格用
-        totalBuy++
-      } else {
-        offset1 = { x: offset1.x, y: offset1.y + 55 }
-        offset2 = { x: offset2.x, y: offset2.y + 55 }
-      }
+    if (await justNextPage(x, y)) {
+      console.log('達成條件! 可以直接跳下一頁面')
+    } else {
+      // region check single page
+      let offset1 = firstItem左上offset
+      let offset2 = firstItem右下offset
 
-      await delay()
+      for (let j = 0; j < 9; j++) {
+        // 沒 nono, 就 buybuy
+        if (!(await nonoFn(x, y, { offset1, offset2, page, forIndex: j }))) {
+          const { status } = await buy(x, y, { ...offset1, y: offset1.y + 5 })
+          switch (status) {
+            case '不足':
+              console.log('購買空間不夠了')
+              return { totalBuy, status: '購買空間不夠了' }
+
+            case '不存在':
+              console.log('剛剛要買的東西沒買到，不見惹')
+              totalBuy-- // 後面怎樣都會++, 所以這邊先--
+              break
+
+            case '等待超時':
+              console.log('購買的等待超時了，我也不知道該怎麼辦其實, 後面應該會買成功.. 吧')
+              break
+          }
+
+          j-- // 卡在同一格用
+          totalBuy++
+          console.log(`目前買了 ${totalBuy} 個`)
+        } else {
+          offset1 = { x: offset1.x, y: offset1.y + 55 }
+          offset2 = { x: offset2.x, y: offset2.y + 55 }
+        }
+      }
+      // endregion check single page
     }
-    // endregion check single page
 
     // 檢查到最後一頁了沒
     if (checkPage() != null) {
+      // 先用 / 的方式判斷
       const [c, t] = page.split('/')
       if (c === t) break
-    }
-    // 檢查到達最大購買數量了沒
-    if (totalBuy >= limit) {
-      console.log(`達到最大購買數量了: ${totalBuy}`)
-      break
+
+      // 不行的話用回歸判斷
+      const reverse = page.split('').reverse().join('')
+      if (page === reverse) break
+
+      // 最後就用與之前相同與否的方式判斷吧
+      if (page === previousPage) break
     }
 
     // 還沒到，換頁後繼續
+    previousPage = page
     await goNextPage(x, y)
     await delay()
   }
 
-  return totalBuy
+  return { totalBuy, status: '當前類別沒有東西了' }
 
-  async function goNextPage(x, y) {
-    await _moveMouseByOffset(x, y, { x: 687, y: 171 }, { randomX: 1, randomY: 1 })
+  async function goNextPage(x, y, { justMove = false } = {}) {
+    _moveMouseByOffset(x, y, { x: 687, y: 171 }, { randomX: 1, randomY: 1 })
     await delay()
-    await clickMouse()
+
+    if (justMove) return
+
+    clickMouse()
     await delay()
   }
 }

@@ -1,108 +1,106 @@
 import rb from 'robotjs'
+import { delay } from './others.js'
 
-let doBuff = true
 const buffBetweenEach = {
   coldTime: 3 * 1000,
   previousTimestamp: 0,
 }
-const buffList = [
-  {
-    code: '2',
-    vkCode: 'VK_2',
-    coldTime: 123 * 1000,
-    priority: false,
-    previousTimestamp: Date.now() + 123,
-  },
-  {
-    code: '3',
-    vkCode: 'VK_3',
-    coldTime: 123 * 1000,
-    priority: true,
-    previousTimestamp: Date.now(),
-  },
-  {
-    code: '4',
-    vkCode: 'VK_4',
-    coldTime: 243 * 1000,
-    priority: false,
-    previousTimestamp: Date.now(),
-  },
-  {
-    code: 'home',
-    vkCode: 'VK_HOME',
-    coldTime: 183 * 1000,
-    priority: false,
-    previousTimestamp: Date.now(),
-  },
-  {
-    code: 'end',
-    vkCode: 'VK_END',
-    coldTime: 123 * 1000,
-    priority: false,
-    previousTimestamp: Date.now(),
-  },
-  {
-    code: 'pagedown',
-    vkCode: 'VK_NEXT',
-    coldTime: 63 * 1000,
-    priority: false,
-    previousTimestamp: Date.now(),
-  },
-  {
-    code: 'delete',
-    vkCode: 'VK_DELETE',
-    coldTime: 45 * 1000,
-    priority: false,
-    previousTimestamp: Date.now(),
-  },
-  {
-    code: '6',
-    vkCode: 'VK_6',
-    coldTime: 500 * 1000,
-    priority: false,
-    previousTimestamp: Date.now(),
-  },
-  {
-    code: 'n',
-    vkCode: 'VK_n',
-    coldTime: 255 * 1000,
-    priority: false,
-    previousTimestamp: Date.now(),
-  },
-  {
-    code: '6',
-    vkCode: 'VK_6',
-    coldTime: 63 * 1000,
-    priority: false,
-    previousTimestamp: Date.now(),
-  },
-]
+let buffList = null
+function generateBuffList() {
+  const previousTimestamp = Date.now()
+  return [
+    {
+      code: '2',
+      vkCode: 'VK_2',
+      coldTime: 120 * 1000,
+      priority: false,
+      previousTimestamp,
+    },
+    {
+      code: '3',
+      vkCode: 'VK_3',
+      coldTime: 120 * 1000,
+      priority: true,
+      previousTimestamp,
+    },
+    {
+      code: '4',
+      vkCode: 'VK_4',
+      coldTime: 240 * 1000,
+      priority: false,
+      previousTimestamp,
+    },
+    {
+      code: 'home',
+      vkCode: 'VK_HOME',
+      coldTime: 180 * 1000,
+      priority: false,
+      previousTimestamp,
+    },
+    {
+      code: 'end',
+      vkCode: 'VK_END',
+      coldTime: 120 * 1000,
+      priority: false,
+      previousTimestamp,
+    },
+    {
+      code: 'pagedown',
+      vkCode: 'VK_NEXT',
+      coldTime: 60 * 1000,
+      priority: false,
+      previousTimestamp,
+    },
+    {
+      code: 'delete',
+      vkCode: 'VK_DELETE',
+      coldTime: 45 * 1000,
+      priority: false,
+      previousTimestamp,
+    },
+    {
+      code: '5',
+      vkCode: 'VK_5',
+      coldTime: 63 * 1000,
+      priority: false,
+      previousTimestamp,
+    },
+    {
+      code: 'n',
+      vkCode: 'VK_n',
+      coldTime: 250 * 1000,
+      priority: false,
+      previousTimestamp,
+    },
+    {
+      code: '6',
+      vkCode: 'VK_6',
+      coldTime: 60 * 1000,
+      priority: false,
+      previousTimestamp,
+    },
+  ]
+}
+
 function buffStuff(test = false) {
   const current = Date.now()
+  if (buffList == null) buffList = generateBuffList()
 
-  // 兩次檢查太近的話直接跳掉
+  // 因為是放在攻擊之間，所以如果兩次放 buff 的間隔如果太近就直接跳掉，
   if (buffBetweenEach.previousTimestamp + buffBetweenEach.coldTime > current) return
 
   // 一次放幾個技能: 1 ~ 2
   let buffCount = randomNumber(2)
-  // test && console.log('buffCount:', buffCount)
 
   // 有 priority 的放前面
-  const list = buffList
-    .slice()
-    .sort(() => Math.random() - 0.5)
-    .sort((a) => (a.priority ? -1 : 1))
+  const list = buffList.sort(() => Math.random() - 0.5).sort((a) => (a.priority ? -1 : 1))
 
   test && console.log('buff list: ', JSON.stringify(list.map((item) => item.code)))
+
   for (let i = 0; i < list.length; i++) {
     const buff = list[i]
     if (buff.previousTimestamp + buff.coldTime < current) {
-      // TODO sleep function
-      ;(function sleep() {
-        rb.setKeyboardDelay(randomNumber(200, 100))
-        rb.keyTap('7') // 這個按鍵目前沒有綁定任何功能
-        rb.setKeyboardDelay(10)
-      })()
+      sleepWithRb(randomNumber(200, 100))
 
       // each between part
       buffBetweenEach.previousTimestamp = Date.now() + randomNumber(4000, 0)
@@ -128,38 +126,39 @@ const attackList = [
   {
     code: 'g',
     vkCode: 'VK_G',
-    coldTime: 9 * 1000,
+    coldTime: 8 * 1000,
     delayTime: 100,
-    previousTimestamp: Date.now() + 5000,
+    previousTimestamp: null,
   },
   {
     code: 'a',
     vkCode: 'VK_A',
     coldTime: 13 * 1000,
     delayTime: 75,
-    previousTimestamp: Date.now() + 5000,
+    previousTimestamp: null,
   },
   {
     code: 'y',
     vkCode: 'VK_Y',
-    coldTime: 46 * 1000,
+    coldTime: 45 * 1000,
     delayTime: 75,
-    previousTimestamp: Date.now() + 5000,
+    previousTimestamp: null,
   },
 ]
 async function attack({ useDefault = false, afterDelay = null } = {}) {
   // 攻擊前放 buff
-  doBuff && buffStuff()
+  buffStuff()
 
   // 雖然已經很近了，但每個技能還是多少有一些時間差
   // 不設定這個的話霹靂可以更快，但位置會跑掉
-  // 或許可以設定每個技能有不同的 delay
+  // 或許可以設定每個技能有不同的延遲
   rb.setKeyboardDelay(randomNumber(120, 100))
 
   let alreayAttack = false
   const current = Date.now()
   for (let i = 0; i < attackList.length && !useDefault; i++) {
     const attack = attackList[i]
+    if (attack.previousTimestamp == null) attack.previousTimestamp = Date.now()
     if (attack.previousTimestamp + attack.coldTime < current) {
       alreayAttack = true
       rb.keyTap(attack.code)
@@ -261,17 +260,17 @@ function goUp({ type = 'top' } = {}) {
   type === 'top' && rb.keyTap('d')
   rb.setKeyboardDelay(10)
 }
-function goDown({ delay = 500 } = {}) {
+function goDown({ delayMs = 500 } = {}) {
   rb.setKeyboardDelay(randomNumber(60, 50))
   rb.keyToggle('down', 'down')
   rb.setKeyboardDelay(10)
   rb.keyTap('alt')
-  rb.setKeyboardDelay(randomNumber(delay + 20, delay))
+  rb.setKeyboardDelay(randomNumber(delayMs + 20, delayMs))
   rb.keyToggle('down', 'up')
   rb.setKeyboardDelay(10)
 }
 function hop() {
-  delay(50)
+  sleepWithRb(50)
 
   rb.setKeyboardDelay(randomNumber(100, 50))
   rb.keyTap('d')
@@ -296,6 +295,15 @@ function randomNumber(max = 10, min = 1) {
   if (max < min) console.log('[randomNumber] max is smaller than min!', max, min)
 
   return Math.floor(Math.random() * (max - min + 1)) + min
+}
+function left(times, goBack = halfChance()) {
+  return attackThrough({ direction: 'left', times, goBack })
+}
+function right(times, goBack = halfChance()) {
+  return attackThrough({ direction: 'right', times, goBack })
+}
+function justAttack(times) {
+  return attackThrough({ moveFirst: false, times, goBack: false })
 }
 
 export function test() {
@@ -711,7 +719,8 @@ export function movie() {
 }
 
 export function redRobot() {
-  const createMovieList = () => [type1, type2, type3].sort(() => Math.random() - 0.5)
+  // const createMovieList = () => [type1, type2, type3].sort(() => Math.random() - 0.5)
+  const createMovieList = () => [type4].sort(() => Math.random() - 0.5)
 
   let fn = null
   let fnList = createMovieList()
@@ -723,6 +732,24 @@ export function redRobot() {
     fn()
   }
 
+  function type4() {
+    right(2, false)
+    hop()
+    justAttack(2)
+    hop()
+    justAttack(2)
+    hop()
+    justAttack(2)
+
+    left(2, false)
+    hop()
+    justAttack(2)
+    hop()
+    justAttack(2)
+    hop()
+    justAttack(2)
+  }
+
   function type3() {
     right(2)
     goDown()
@@ -730,13 +757,14 @@ export function redRobot() {
     left(2)
     right(7, false)
 
-    left(4, false)
+    left(5, false)
     goUp()
     justAttack(3)
     hop()
     justAttack(2)
     goDown()
-    justAttack(2)
+    right(3)
+    left(2)
   }
 
   function type2() {
@@ -768,20 +796,12 @@ export function redRobot() {
     hop()
     left(2)
     hop()
+    justAttack(3)
   }
 }
 
-function left(times, goBack = halfChance()) {
-  return attackThrough({ direction: 'left', times, goBack })
-}
-function right(times, goBack = halfChance()) {
-  return attackThrough({ direction: 'right', times, goBack })
-}
-function justAttack(times) {
-  return attackThrough({ moveFirst: false, times, goBack: false })
-}
-
-function delay(msec = 200) {
+// TODO(flyc): 要看看有沒有不需要 promise 的 sleep 功能
+function sleepWithRb(msec = 200) {
   rb.setKeyboardDelay(msec)
   rb.keyTap('7')
   rb.setKeyboardDelay(10)
