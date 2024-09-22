@@ -12,7 +12,6 @@ import {
 import rb from 'robotjs'
 
 // 1366 * 768
-const bagSize = 65
 // 城鎮
 const 裝備_offset = { x: 30, y: 124 }
 const 背包整理_offest = { x: 172, y: 486 }
@@ -41,9 +40,8 @@ const 頁碼右下_offset = { x: 668, y: 176 }
 const extractOpenOffset = { x: 485, y: 489 }
 const confirmOffset = { x: 809, y: 510 }
 
-const MARKET_HAS_ITEM_WHICH_CAN_ONLY_HAVE_ONE_STATUS = 'has-item-which-can-only-have-one-status'
 const MARKET_MATCH_MAX_STATYS = 'match-max-status'
-export const MARKET_NO_MORE_STATUS = 'no-more-status'
+const MARKET_NO_MORE_STATUS = 'no-more-status'
 
 // 進入城鎮
 // 讓右上角的小地圖包含地圖名稱一起顯示
@@ -235,8 +233,6 @@ export async function market() {
   pressEnter()
   delay(50)
 
-  console.log('包包容量: ', bagSize)
-
   await goToSearch(x, y)
 
   // 清空畫面，不然會買到其他東西。。。
@@ -246,10 +242,10 @@ export async function market() {
   let status = null
   let boughtNumber = 0
 
-  res = await 買防具({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 防具' })
+  res = await 買防具({ x, y, boughtNumber, price: 100000, level: 130, message: '開始買 130 防具' })
   boughtNumber = res.boughtNumber
   status = res.status
-  if (status !== '買完了' || !checkMax(boughtNumber, bagSize)) {
+  if (status === '購買空間不夠了') {
     await recieveItems(x, y)
     return { status: MARKET_MATCH_MAX_STATYS }
   }
@@ -257,10 +253,10 @@ export async function market() {
   console.log('')
   await delay(2000)
 
-  res = await 買武器({ x, y, boughtNumber, price: 70000, level: 130, message: '開始買 130 武器' })
+  res = await 買武器({ x, y, boughtNumber, price: 100000, level: 130, message: '開始買 130 武器' })
   boughtNumber = res.boughtNumber
   status = res.status
-  if (status !== '買完了' || !checkMax(boughtNumber, bagSize)) {
+  if (status === '購買空間不夠了') {
     await recieveItems(x, y)
     return { status: MARKET_MATCH_MAX_STATYS }
   }
@@ -268,10 +264,10 @@ export async function market() {
   console.log('')
   await delay(2000)
 
-  res = await 買防具({ x, y, boughtNumber, price: 50000, message: '開始買 108 防具' })
+  res = await 買防具({ x, y, boughtNumber, price: 70000, message: '開始買 108 防具' })
   boughtNumber = res.boughtNumber
   status = res.status
-  if (status !== '買完了' || !checkMax(boughtNumber, bagSize)) {
+  if (status === '購買空間不夠了') {
     await recieveItems(x, y)
     return { status: MARKET_MATCH_MAX_STATYS }
   }
@@ -279,10 +275,10 @@ export async function market() {
   console.log('')
   await delay(2000)
 
-  res = await 買武器({ x, y, boughtNumber, price: 50000, message: '開始買 108 武器' })
+  res = await 買武器({ x, y, boughtNumber, price: 70000, message: '開始買 108 武器' })
   boughtNumber = res.boughtNumber
   status = res.status
-  if (status !== '買完了' || !checkMax(boughtNumber, bagSize)) {
+  if (status === '購買空間不夠了') {
     await recieveItems(x, y)
     return { status: MARKET_MATCH_MAX_STATYS }
   }
@@ -402,16 +398,6 @@ async function 買武器({ x, y, boughtNumber, price, level, message = '開始�
   })
 }
 
-function checkMax(boughtNumber, bagSize) {
-  if (boughtNumber >= bagSize) {
-    console.log('達到上限了!')
-    console.log(`這次買了 ${boughtNumber} 個`)
-    return false
-  }
-
-  return true
-}
-
 async function setPriceAndLevel(x, y, config) {
   const { 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset, price, level } = config
 
@@ -497,14 +483,13 @@ async function buyByOffset(config) {
   // 沒資料的話
   if (!(await checkPage(x, y))) {
     console.log('沒有頁碼!')
-    return { boughtNumber: preBoughtNumber, status: '買完了' }
+    return { boughtNumber: preBoughtNumber, status: '當前類別沒有東西了' }
   }
 
   const { totalBuy: boughtNumber, status } = await buyWithNoNo(x, y, {
     nonoFn,
     justNextPage,
     totalBuy: preBoughtNumber,
-    limit: 100,
   })
   console.log(`總共買了 ${boughtNumber} 個!`)
   return { boughtNumber, status }
@@ -602,15 +587,9 @@ export async function buy(x, y, offset = firstItemOffset) {
 export async function buyWithNoNo(
   x,
   y,
-  { nonoFn = Function.prototype, justNextPage = () => false, totalBuy = 0, limit = 100 }
+  { nonoFn = Function.prototype, justNextPage = () => Promise.resolve(), totalBuy = 0 }
 ) {
   await goNextPage(x, y, { justMove: true })
-
-  // 檢查到達最大購買數量了沒
-  if (totalBuy >= limit) {
-    console.log(`達到最大購買數量了: ${totalBuy}`)
-    return { totalBuy, status: '達到最大購買數量' }
-  }
 
   const firstItem左上offset = { x: 349, y: 220 }
   const firstItem右下offset = { x: 448, y: 251 }
@@ -673,11 +652,6 @@ export async function buyWithNoNo(
       // 最後就用與之前相同與否的方式判斷吧
       if (page === previousPage) break
     }
-    // 檢查到達最大購買數量了沒
-    if (totalBuy >= limit) {
-      console.log(`達到最大購買數量了: ${totalBuy}`)
-      break
-    }
 
     // 還沒到，換頁後繼續
     previousPage = page
@@ -685,7 +659,7 @@ export async function buyWithNoNo(
     await delay()
   }
 
-  return { totalBuy, status: '買完了' }
+  return { totalBuy, status: '當前類別沒有東西了' }
 
   async function goNextPage(x, y, { justMove = false } = {}) {
     _moveMouseByOffset(x, y, { x: 687, y: 171 }, { randomX: 1, randomY: 1 })
