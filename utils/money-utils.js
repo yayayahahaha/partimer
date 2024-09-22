@@ -522,7 +522,8 @@ export async function checkPage(x, y) {
   return true
 }
 
-// TODO 當沒有東西要回收的時候要不要提早結束，目前等到 timeout 的話也不會出錯
+// TODO(flyc): 有時候會出現明明東西還沒有領取完，但卻自己停止的情況
+// 這種情況要再按一次領取: 判斷畫面上的東西消失的時候有沒有出現完成之類的吧
 async function recieveItems(x, y, totalBuy) {
   if (totalBuy === 0) {
     console.log('沒有買東西，所以不用領取')
