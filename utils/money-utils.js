@@ -292,7 +292,7 @@ export async function market() {
 
   await recieveItems(x, y, boughtNumber)
 
-  console.log('市場結束囉!')
+  console.log(`\x1b[1m\x1b[32m${'市場結束囉!'} \x1b[0m`)
 
   return { status: MARKET_NO_MORE_STATUS }
 }
@@ -347,7 +347,7 @@ async function clearMarket(x, y) {
 }
 
 async function 買防具({ x, y, boughtNumber, price, level, message = '開始買防具' } = {}) {
-  console.log(message)
+  console.log(`\x1b[1m\x1b[36m${message} \x1b[0m`)
 
   // 避免買到水晶的 nono function
   async function nonoFn(x, y, { offset1, offset2, page = '', forIndex = '' } = {}) {
@@ -384,7 +384,7 @@ async function 買防具({ x, y, boughtNumber, price, level, message = '開始�
   })
 }
 async function 買武器({ x, y, boughtNumber, price, level, message = '開始買武器' } = {}) {
-  console.log(message)
+  console.log(`\x1b[1m\x1b[36m${message} \x1b[0m`)
 
   return buyByOffset({
     x,
@@ -462,11 +462,11 @@ async function buyByOffset(config) {
   await delay()
 
   // 等「正在搜尋中」出現，如果有的話等他消失
-  console.log('等「正在搜尋中」出現，如果有的話等他消失')
-  const has正在搜尋中 = await waitUntil({ x, y, message: '正在', maxWait: 2 * 1000, place: ['正在搜尋中'], test: true })
+  console.log(`\x1b[1m\x1b[36m${'等「正在搜尋中」出現，如果有的話等他消失'} \x1b[0m`)
+  const has正在搜尋中 = await waitUntil({ x, y, message: '正在', maxWait: 2 * 1000, place: ['正在搜尋中'] })
   if (has正在搜尋中 != null) {
     console.log('有出現「正在搜尋中」，等他消失')
-    await waitUntil({ x, y, message: '正在', maxWait: 60 * 1000, place: ['center'], waitDissapear: true, test: true })
+    await waitUntil({ x, y, message: '正在', maxWait: 60 * 1000, place: ['center'], waitDissapear: true })
   } else {
     console.log('沒有出現「正在搜尋中」')
   }
@@ -495,7 +495,7 @@ async function buyByOffset(config) {
     justNextPage,
     totalBuy: preBoughtNumber,
   })
-  console.log(`總共買了 ${boughtNumber} 個!`)
+  console.log(`\x1b[32m 總共買了 ${boughtNumber} 個! \x1b[0m`)
   return { boughtNumber, status }
 }
 
@@ -538,7 +538,7 @@ async function recieveItems(x, y, totalBuy) {
   // 有時候會出現明明東西還沒有領完，但領取的過程自己中斷的情況
   // 所以需要判斷「領取中」的字樣消失的時候，是真的結束還是其實是 bug
 
-  console.log('檢查有沒有出現領取中')
+  console.log(`\x1b[1m\x1b[36m${'檢查有沒有出現領取中'} \x1b[0m`)
   let has領取中 = await waitUntil({
     x,
     y,
@@ -548,7 +548,8 @@ async function recieveItems(x, y, totalBuy) {
   })
 
   if (has領取中 == null) {
-    console.log('畫面沒有出現「領取中」, 檢查是不是因為已經領完了')
+    console.log('畫面沒有出現「領取中」')
+    console.log(`\x1b[1m\x1b[36m${'檢查是不是因為已經領完了'} \x1b[0m`)
     has已經結束 = await waitUntil({
       x,
       y,
@@ -561,7 +562,7 @@ async function recieveItems(x, y, totalBuy) {
       await delay()
       return
     }
-    console.log('畫面沒有出現領取中，也沒有完成，卡住了! 直接重新嘗試看看')
+    console.log(`\x1b[1m\x1b[31m${'畫面沒有出現領取中，也沒有完成，卡住了! 直接重新嘗試看看'} \x1b[0m`)
     await recieveItems(x, y, totalBuy)
     return
   }
@@ -576,7 +577,8 @@ async function recieveItems(x, y, totalBuy) {
     waitDissapear: true,
   })
 
-  console.log('領取中的字樣消失了, 檢查是消失還是完成')
+  console.log('領取中的字樣消失了')
+  console.log(`\x1b[1m\x1b[36m${'檢查是消失還是完成'} \x1b[0m`)
   has已經結束 = await waitUntil({
     x,
     y,
@@ -584,7 +586,7 @@ async function recieveItems(x, y, totalBuy) {
     maxWait: 3 * 1000,
   })
   if (has已經結束 == null) {
-    console.log('沒有領取中的字樣, 但也沒有完成的字樣，判斷是自己中斷了，重新開始一次！')
+    console.log(`\x1b[1m\x1b[31m${'沒有領取中的字樣, 但也沒有完成的字樣，判斷是自己中斷了，重新開始一次！'} \x1b[0m`)
     await recieveItems(x, y, totalBuy)
     return
   }
@@ -645,7 +647,7 @@ export async function buyWithNoNo(
     page = await getCurrentPage(x, y)
 
     if (await justNextPage(x, y)) {
-      console.log('達成條件! 可以直接跳下一頁面')
+      console.log(`\x1b[32m${'達成條件! 可以直接跳下一頁面'} \x1b[0m`)
     } else {
       // region check single page
       let offset1 = firstItem左上offset
@@ -661,12 +663,12 @@ export async function buyWithNoNo(
               return { totalBuy, status: '購買空間不夠了' }
 
             case '不存在':
-              console.log('剛剛要買的東西沒買到，不見惹')
+              console.log(`\x1b[31m${'剛剛要買的東西沒買到，不見惹'} \x1b[0m`)
               totalBuy-- // 後面怎樣都會++, 所以這邊先--
               break
 
             case '等待超時':
-              console.log('購買的等待超時了，我也不知道該怎麼辦其實, 後面應該會買成功.. 吧')
+              console.log(`\x1b[1m\x1b[31m${'購買的等待超時了，我也不知道該怎麼辦其實, 後面應該會買成功.. 吧'} \x1b[0m`)
               break
           }
 
