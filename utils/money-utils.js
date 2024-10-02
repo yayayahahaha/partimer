@@ -303,7 +303,7 @@ async function englishMarket(x, y) {
   await delay()
   _keyIn('123')
 
-  let is123 = await waitUntil({ x, y, message: '123', place: 'market-search' })
+  let is123 = await waitUntil({ x, y, message: '123', maxWait: 1500, place: 'market-search' })
   if (is123 == null) {
     _keyIn(Array(5).fill('backspace'))
     await delay()
@@ -457,6 +457,7 @@ async function buyByOffset(config) {
   // 設定查詢的資訊 + 開始查詢
   await setPriceAndLevel(x, y, { 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset, price, level })
 
+  // TODO(flyc): 這邊用來判斷的位子不對
   // 等「正在搜尋中」出現，如果有的話等他消失
   console.log('等「正在搜尋中」出現，如果有的話等他消失')
   const has正在搜尋中 = await waitUntil({ x, y, message: '正在', maxWait: 3 * 1000, place: ['center'] })
@@ -566,11 +567,11 @@ export async function buy(x, y, offset = firstItemOffset) {
     (await waitUntil({
       x,
       y,
-      message: ['成功', '不足', '不存在'], // TODO 這個要加上 "是哪個符合到了" 的功能，畢竟要做的事情不一樣
+      message: ['成功', '不足', '不存在'],
       maxWait: 10 * 1000,
     })) || {}
   const isNotEnough = foundIndex === 1 // '不足' 的 index
-  const notExist = foundIndex === 2
+  const notExist = foundIndex === 2 // '不存在' 的 index
 
   pressEnter()
   await delay()
@@ -599,8 +600,6 @@ export async function buyWithNoNo(
 
   for (let i = 0; i < 20; i++) {
     page = await getCurrentPage(x, y)
-
-    console.log(`第 ${i + 1} 頁`)
 
     if (await justNextPage(x, y)) {
       console.log('達成條件! 可以直接跳下一頁面')
@@ -653,7 +652,7 @@ export async function buyWithNoNo(
       if (page === previousPage) break
     }
 
-    // 還沒到，換頁後繼續
+    console.log('還沒到底，換頁後繼續')
     previousPage = page
     await goNextPage(x, y)
     await delay()
