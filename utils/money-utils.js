@@ -545,7 +545,6 @@ async function recieveItems(x, y, totalBuy) {
     place: ['領取中'],
     message: ['全導說'], // 「領取」會被判斷成這個東西..
     maxWait: 1500,
-    test: true,
   })
 
   if (has領取中 == null) {
@@ -575,7 +574,6 @@ async function recieveItems(x, y, totalBuy) {
     message: ['全導說'], // 「領取」會被判斷成這個東西..
     maxWait: 120 * 1000, // 這個可以改成依照買的數量做動態變動? 之前 10 個的話是 15 秒左右
     waitDissapear: true,
-    test: true,
   })
 
   console.log('領取中的字樣消失了, 檢查是消失還是完成')

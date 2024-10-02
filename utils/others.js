@@ -217,29 +217,41 @@ export async function waitUntil({
           }
         })
 
-        let result = -1
+        let foundIndex = -1
+        let found = null
         for (let i = 0; i < fList.length; i++) {
           const { fn, message } = fList[i]
           const imgText = await fn(x, y)
           let messageList = message
 
-          test && console.log('waitUntil:', JSON.stringify(imgText), JSON.stringify(message))
-
           if (!Array.isArray(messageList)) messageList = [messageList]
 
-          result = messageList.findIndex((str) => imgText.match(new RegExp(str)))
-          const found = !!~result
+          foundIndex = messageList.findIndex((str) => imgText.match(new RegExp(str)))
+          found = !!~foundIndex
+
+          test && console.log('waitUntil:', JSON.stringify(imgText), JSON.stringify(message))
+          test && console.log(`found: ${found}, foundIndex: ${foundIndex}`)
+
           if (waitDissapear) {
             if (!found) break
           } else {
             if (found) break
           }
         }
-        if (~result) {
-          resolve({ index: result })
+        if (waitDissapear) {
+          if (!found) {
+            resolve({ success: true, dissapear: true })
 
-          // 避免 nodejs 卡住
-          return void setTimeout(delayResolve, 100)
+            // 避免 nodejs 卡住
+            return void setTimeout(delayResolve, 100)
+          }
+        } else {
+          if (found) {
+            resolve({ index: foundIndex })
+
+            // 避免 nodejs 卡住
+            return void setTimeout(delayResolve, 100)
+          }
         }
 
         if (stopTry) return resolve(null)
