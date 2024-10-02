@@ -1,4 +1,4 @@
-import { beforeStart } from './utils/others.js'
+import { beforeStart, displayMousePosition } from './utils/others.js'
 import { extract, market, money } from './utils/money-utils.js'
 import { anotherGo, movie, redRobot } from './utils/thunder.js'
 import select from '@inquirer/select'
@@ -31,6 +31,10 @@ async function start() {
         name: 'extract',
         value: 'extract',
       },
+      {
+        name: 'coordinate 顯示座標',
+        value: '顯示座標',
+      },
     ],
   })
   console.log(`選了: ${selectAnswer}`)
@@ -59,6 +63,10 @@ async function start() {
 
     case 'extract':
       extract()
+      break
+
+    case '顯示座標':
+      displayMousePosition()
       break
   }
 }

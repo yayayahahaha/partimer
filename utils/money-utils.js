@@ -1,3 +1,5 @@
+// TODO(flyc): 「正在搜尋中」 和 「正在領取中」目前還沒有測試完成
+
 import { pressEnter } from './keyboard-action.js'
 import { clickMouse, clickRightMouse } from './mouse-control.js'
 import {
@@ -457,10 +459,9 @@ async function buyByOffset(config) {
   // 設定查詢的資訊 + 開始查詢
   await setPriceAndLevel(x, y, { 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset, price, level })
 
-  // TODO(flyc): 這邊用來判斷的位子不對
   // 等「正在搜尋中」出現，如果有的話等他消失
   console.log('等「正在搜尋中」出現，如果有的話等他消失')
-  const has正在搜尋中 = await waitUntil({ x, y, message: '正在', maxWait: 3 * 1000, place: ['center'] })
+  const has正在搜尋中 = await waitUntil({ x, y, message: '正在', maxWait: 2 * 1000, place: ['正在搜尋中'], test: true })
   if (has正在搜尋中 != null) {
     console.log('有出現「正在搜尋中」，等他消失')
     await waitUntil({ x, y, message: '正在', maxWait: 60 * 1000, place: ['center'], waitDissapear: true })
@@ -508,7 +509,6 @@ export async function checkPage(x, y) {
   return true
 }
 
-// TODO(flyc): 有時候會出現明明東西還沒有領取完，但卻自己停止的情況
 // 這種情況要再按一次領取: 判斷畫面上的東西消失的時候有沒有出現完成之類的吧
 async function recieveItems(x, y, totalBuy) {
   if (totalBuy === 0) {
@@ -532,19 +532,63 @@ async function recieveItems(x, y, totalBuy) {
   await delay()
   pressEnter()
 
-  await waitUntil({
+  let has已經結束 = null
+
+  // 有時候會出現明明東西還沒有領完，但領取的過程自己中斷的情況
+  // 所以需要判斷「領取中」的字樣消失的時候，是真的結束還是其實是 bug
+
+  console.log('檢查有沒有出現領取中')
+  let has領取中 = await waitUntil({
+    x,
+    y,
+    place: ['領取中'],
+    message: ['領取'],
+    maxWait: 1500,
+    test: true,
+  })
+
+  if (has領取中 == null) {
+    console.log('畫面沒有出現「領取中」, 檢查是不是因為已經領完了')
+    has已經結束 = await waitUntil({
+      x,
+      y,
+      message: ['已完成', '只能持有', '空間不足', '不足'],
+      maxWait: 3 * 1000,
+    })
+    if (has已經結束 != null) {
+      console.log('已經領取完成!')
+      pressEnter()
+      await delay()
+      return
+    }
+    console.log('畫面沒有出現領取中，也沒有完成，卡住了! 直接重新嘗試看看')
+    await recieveItems(x, y, totalBuy)
+    return
+  }
+
+  console.log('目前正在領取中, 等待領取中的字樣消失')
+  has領取中 = await waitUntil({
+    x,
+    y,
+    place: ['領取中'],
+    message: ['領取'],
+    maxWait: 120 * 1000, // 這個可以改成依照買的數量做動態變動? 之前 10 個的話是 15 秒左右
+    waitDissapear: true,
+    test: true,
+  })
+
+  console.log('領取中的字樣消失了, 檢查是消失還是完成')
+  has已經結束 = await waitUntil({
     x,
     y,
     message: ['已完成', '只能持有', '空間不足', '不足'],
-    maxWait: 120 * 1000, // 這個可以改成依照買的數量做動態變動, 之前 10 個的話是 15 秒
+    maxWait: 3 * 1000,
   })
-
-  await waitUntil({
-    x,
-    y,
-    message: '已完成',
-    maxWait: 1 * 1000,
-  })
+  if (has已經結束 == null) {
+    console.log('沒有領取中的字樣, 但也沒有完成的字樣，判斷是自己中斷了，重新開始一次！')
+    await recieveItems(x, y, totalBuy)
+    return
+  }
 
   pressEnter()
   await delay()
