@@ -459,12 +459,14 @@ async function buyByOffset(config) {
   // 設定查詢的資訊 + 開始查詢
   await setPriceAndLevel(x, y, { 標題_offset, 重置_offset, 等級_offset, 價格_offset, 搜尋_offset, price, level })
 
+  await delay()
+
   // 等「正在搜尋中」出現，如果有的話等他消失
   console.log('等「正在搜尋中」出現，如果有的話等他消失')
   const has正在搜尋中 = await waitUntil({ x, y, message: '正在', maxWait: 2 * 1000, place: ['正在搜尋中'], test: true })
   if (has正在搜尋中 != null) {
     console.log('有出現「正在搜尋中」，等他消失')
-    await waitUntil({ x, y, message: '正在', maxWait: 60 * 1000, place: ['center'], waitDissapear: true })
+    await waitUntil({ x, y, message: '正在', maxWait: 60 * 1000, place: ['center'], waitDissapear: true, test: true })
   } else {
     console.log('沒有出現「正在搜尋中」')
   }
@@ -509,7 +511,6 @@ export async function checkPage(x, y) {
   return true
 }
 
-// 這種情況要再按一次領取: 判斷畫面上的東西消失的時候有沒有出現完成之類的吧
 async function recieveItems(x, y, totalBuy) {
   if (totalBuy === 0) {
     console.log('沒有買東西，所以不用領取')
@@ -542,7 +543,7 @@ async function recieveItems(x, y, totalBuy) {
     x,
     y,
     place: ['領取中'],
-    message: ['領取'],
+    message: ['全導說'], // 「領取」會被判斷成這個東西..
     maxWait: 1500,
     test: true,
   })
@@ -571,7 +572,7 @@ async function recieveItems(x, y, totalBuy) {
     x,
     y,
     place: ['領取中'],
-    message: ['領取'],
+    message: ['全導說'], // 「領取」會被判斷成這個東西..
     maxWait: 120 * 1000, // 這個可以改成依照買的數量做動態變動? 之前 10 個的話是 15 秒左右
     waitDissapear: true,
     test: true,

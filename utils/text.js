@@ -29,7 +29,7 @@ export async function captureScreenAndConvertToJimp(config = {}) {
       .contrast(0.7) // 提高對比度
       .invert() // 反轉顏色
 
-    image.write('text-text.png')
+    image.write(`checkImg/${Date.now()}.png`)
 
     resolve(image.getBufferAsync(Jimp.AUTO))
   })

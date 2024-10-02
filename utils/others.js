@@ -29,8 +29,8 @@ const 中央訊息右下_offset = { x: 583, y: 437 }
 const 正在搜尋中訊息左上_offset = { x: 442, y: 382 }
 const 正在搜尋中訊息右下_offset = { x: 598, y: 416 }
 
-const 領取中訊息左上_offset = { x: 457, y: 380 }
-const 領取中訊息右下_offset = { x: 581, y: 393 }
+const 領取中訊息左上_offset = { x: 405, y: 366 }
+const 領取中訊息右下_offset = { x: 600, y: 393 }
 
 const 分解訊息左上_offset = { x: 651, y: 392 }
 const 分解訊息右下_offset = { x: 727, y: 420 }
