@@ -624,10 +624,10 @@ export async function buy(x, y, offset = firstItemOffset) {
   return isNotEnough
     ? { status: '不足' }
     : notExist
-    ? { status: '不存在' }
-    : foundIndex == null
-    ? { status: '等待超時' }
-    : { status: '成功' }
+      ? { status: '不存在' }
+      : foundIndex == null
+        ? { status: '等待超時' }
+        : { status: '成功' }
 }
 
 export async function buyWithNoNo(

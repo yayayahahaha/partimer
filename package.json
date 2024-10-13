@@ -15,6 +15,7 @@
     "prettier": "^3.2.5"
   },
   "dependencies": {
+    "@inquirer/select": "^3.0.1",
     "ffi-napi": "^4.0.3",
     "jimp": "^0.22.10",
     "node-global-key-listener": "^0.1.1",
