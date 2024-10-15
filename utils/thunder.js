@@ -691,7 +691,8 @@ export async function anotherGo() {
 }
 
 export function movie() {
-  const createMovieList = () => [type1].sort(() => Math.random() - 0.5)
+  const createMovieList = () => [type2].sort(() => Math.random() - 0.5)
+  // const createMovieList = () => [type1].sort(() => Math.random() - 0.5)
 
   let fn = null
   let fnList = createMovieList()
@@ -701,6 +702,35 @@ export function movie() {
     console.log('fnList:', fnList)
     fn = fnList.splice(0, 1)[0]
     fn()
+  }
+
+  function type2() {
+    right(2)
+    left(4)
+    goDown()
+    right(5)
+    justAttack(3)
+    left(1, false)
+    goUp()
+    justAttack(3)
+    jUp()
+    justAttack(2)
+    right(3, false)
+    left(4)
+
+    goDown()
+    justAttack(2)
+    hop()
+    justAttack(2)
+    goDown()
+    justAttack(2)
+    goUp()
+    justAttack(2)
+    goDown()
+    left(3)
+    goDown()
+    right(3)
+    goDown()
   }
 
   function type1() {
@@ -763,9 +793,7 @@ export function redRobot() {
     justAttack(3)
     right(5)
 
-    left(3, false)
-    left(5, false)
-    left(4, false)
+    left(11, false)
 
     right(2, false)
     goUp()
