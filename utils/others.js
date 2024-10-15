@@ -1,3 +1,5 @@
+// TODO(flyc): 可以更快新增想要確認的字的 waitUntil 的方法
+
 // 1366 * 768
 import { getForegroundWindowRect, getForegroundWindowTitle } from './application-control.js'
 import { pressEnter } from './keyboard-action.js'
@@ -23,6 +25,12 @@ const 搜尋結果右下_offset = { x: 355, y: 180 }
 
 const 中央訊息左上_offset = { x: 435, y: 414 }
 const 中央訊息右下_offset = { x: 583, y: 437 }
+
+const 正在搜尋中訊息左上_offset = { x: 442, y: 382 }
+const 正在搜尋中訊息右下_offset = { x: 598, y: 416 }
+
+const 領取中訊息左上_offset = { x: 405, y: 366 }
+const 領取中訊息右下_offset = { x: 600, y: 393 }
 
 const 分解訊息左上_offset = { x: 651, y: 392 }
 const 分解訊息右下_offset = { x: 727, y: 420 }
@@ -63,6 +71,14 @@ export async function marketAndExtract() {
 
   console.log('結束囉!')
   return marketResult // for recursive stuff
+}
+
+function get領取中Message(x, y) {
+  return getTextByOffset(x, y, 領取中訊息左上_offset, 領取中訊息右下_offset, 'chi_tra')
+}
+
+function get正在搜尋中Message(x, y) {
+  return getTextByOffset(x, y, 正在搜尋中訊息左上_offset, 正在搜尋中訊息右下_offset, 'chi_tra')
 }
 
 function getCenterMessage(x, y) {
@@ -175,6 +191,12 @@ export async function waitUntil({
 
         const fList = place.map((place, i) => {
           switch (place) {
+            case '領取中':
+              return { fn: get領取中Message, message: message[i] || null }
+
+            case '正在搜尋中':
+              return { fn: get正在搜尋中Message, message: message[i] || null }
+
             case 'center':
               return { fn: getCenterMessage, message: message[i] || null }
 
@@ -195,29 +217,41 @@ export async function waitUntil({
           }
         })
 
-        let result = -1
+        let foundIndex = -1
+        let found = null
         for (let i = 0; i < fList.length; i++) {
           const { fn, message } = fList[i]
           const imgText = await fn(x, y)
           let messageList = message
 
-          test && console.log('waitUntil:', JSON.stringify(imgText), JSON.stringify(message))
-
           if (!Array.isArray(messageList)) messageList = [messageList]
 
-          result = messageList.findIndex((str) => imgText.match(new RegExp(str)))
-          const found = !!~result
+          foundIndex = messageList.findIndex((str) => imgText.match(new RegExp(str)))
+          found = !!~foundIndex
+
+          test && console.log('waitUntil:', JSON.stringify(imgText), JSON.stringify(message))
+          test && console.log(`found: ${found}, foundIndex: ${foundIndex}`)
+
           if (waitDissapear) {
             if (!found) break
           } else {
             if (found) break
           }
         }
-        if (~result) {
-          resolve({ index: result })
+        if (waitDissapear) {
+          if (!found) {
+            resolve({ success: true, dissapear: true })
 
-          // 避免 nodejs 卡住
-          return void setTimeout(delayResolve, 100)
+            // 避免 nodejs 卡住
+            return void setTimeout(delayResolve, 100)
+          }
+        } else {
+          if (found) {
+            resolve({ index: foundIndex })
+
+            // 避免 nodejs 卡住
+            return void setTimeout(delayResolve, 100)
+          }
         }
 
         if (stopTry) return resolve(null)
