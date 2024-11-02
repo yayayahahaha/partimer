@@ -691,7 +691,7 @@ export async function anotherGo() {
 }
 
 export function movie() {
-  const createMovieList = () => [type2].sort(() => Math.random() - 0.5)
+  const createMovieList = () => [movie1].sort(() => Math.random() - 0.5)
   // const createMovieList = () => [type1].sort(() => Math.random() - 0.5)
 
   let fn = null
@@ -704,7 +704,7 @@ export function movie() {
     fn()
   }
 
-  function type2() {
+  function movie1() {
     right(2)
     left(4)
     goDown()
@@ -732,29 +732,10 @@ export function movie() {
     right(3)
     goDown()
   }
-
-  function type1() {
-    right(3)
-    hop()
-    right(2)
-    hop()
-    right(2)
-    goUp()
-    right(3)
-    left(4)
-    jumpFar()
-    justAttack(3)
-    hop()
-    justAttack(2)
-    right(3)
-    goDown()
-    left(2)
-  }
 }
 
 export function redRobot() {
-  const createMovieList = () => [type4, type1, type2, type3].sort(() => Math.random() - 0.5)
-  // const createMovieList = () => [type4, type1].sort(() => Math.random() - 0.5)
+  const createMovieList = () => [redBot1, redBot2, redBot3, redRobot4].sort(() => Math.random() - 0.5)
 
   let fn = null
   let fnList = createMovieList()
@@ -766,7 +747,7 @@ export function redRobot() {
     fn()
   }
 
-  function type3() {
+  function redBot1() {
     right(2, false)
     hop()
     justAttack(2)
@@ -787,7 +768,7 @@ export function redRobot() {
     justAttack(3)
   }
 
-  function type2() {
+  function redBot2() {
     right(2)
     goDown()
     justAttack(3)
@@ -802,7 +783,7 @@ export function redRobot() {
     goDown()
   }
 
-  function type1() {
+  function redBot3() {
     right(2)
     jUp()
     justAttack(2)
@@ -822,7 +803,7 @@ export function redRobot() {
     justAttack(2)
   }
 
-  function type4() {
+  function redRobot4() {
     right(2, false)
     hop()
     justAttack(2)
