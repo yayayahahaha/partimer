@@ -759,6 +759,8 @@ export function redRobot() {
     left(1, false)
     jUp()
     justAttack(2)
+    right(2, false)
+    left(3, false)
     jumpFar()
     justAttack(2)
     goDown()
