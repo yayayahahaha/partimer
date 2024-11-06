@@ -77,7 +77,7 @@ function generateBuffList() {
       code: '6',
       vkCode: 'VK_6',
       coldTime: 30 * 1000,
-      priority: false,
+      priority: true,
       previousTimestamp,
     },
   ]
