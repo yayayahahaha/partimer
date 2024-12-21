@@ -38,8 +38,8 @@ const 離開_offset = { x: 977, y: 56 }
 const 鎮名左上_Offset = { x: 135, y: 60 }
 const 鎮名右下_Offset = { x: 188, y: 80 }
 
-const 市場標題左上_Offset = { x: 11, y: 43 }
-const 市場標題右下_Offset = { x: 140, y: 75 }
+const 市場標題左上_Offset = { x: 342, y: 77 }
+const 市場標題右下_Offset = { x: 398, y: 98 }
 
 const 市場搜尋左上_offset = { x: 100, y: 81 }
 const 市場搜尋右下_offset = { x: 250, y: 96 }
@@ -53,7 +53,14 @@ export async function marketAndExtract() {
   _keyIn([']', ...Array(4).fill('down')])
   pressEnter()
 
-  const inMarket = await waitUntil({ x, y, maxWait: 10 * 1000, message: '楓之谷拍賣', place: 'market-title' })
+  const inMarket = await waitUntil({
+    x,
+    y,
+    maxWait: 10 * 1000,
+    message: '完全一致',
+    place: 'market-title',
+    test: true,
+  })
   if (inMarket == null) return void console.log('到不了市場。。。')
 
   const marketResult = await market()
